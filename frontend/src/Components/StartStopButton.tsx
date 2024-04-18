@@ -1,7 +1,7 @@
 import React from "react";
 
 export function StartStopButton({ recording, setRecording, driverInput, trackNameInput, eventTypeInput,
-    drivetrainTypeInput, massInput, wheelbaseInput, firmwareRevInput }: {
+    drivetrainTypeInput, massInput, wheelbaseInput, firmwareRevInput, timeInput}: {
         recording: boolean,
         setRecording: React.Dispatch<React.SetStateAction<boolean>>,
         driverInput: string,
@@ -10,7 +10,8 @@ export function StartStopButton({ recording, setRecording, driverInput, trackNam
         drivetrainTypeInput: string,
         massInput: string,
         wheelbaseInput: string,
-        firmwareRevInput: string
+        firmwareRevInput: string,
+        timeInput: string
     }) {
 
     var waitingForResponse: Boolean = false
@@ -65,7 +66,8 @@ export function StartStopButton({ recording, setRecording, driverInput, trackNam
                 drivetrainType: drivetrainTypeInput,
                 mass: massInput,
                 wheelbase: wheelbaseInput,
-                firmwareRev: firmwareRevInput
+                firmwareRev: firmwareRevInput,
+                time: timeInput
             }),
             headers: {
                 Accept: 'application/json',

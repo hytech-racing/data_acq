@@ -41,7 +41,7 @@ function App() {
             <TextForm title={"Firmware Rev"} isNum={false} data={firmwareRevInput} setData={setFirmwareRevInput} recording={recording}/>
 
             <div className={"flex"}>
-                <StartStopButton recording={recording} setRecording={setRecording} driverInput={driverInput} trackNameInput={trackNameInput} eventTypeInput={eventTypeInput} drivetrainTypeInput={drivetrainTypeInput} massInput={massInput} wheelbaseInput={wheelbaseInput} firmwareRevInput={firmwareRevInput}/>
+                <StartStopButton recording={recording} setRecording={setRecording} driverInput={driverInput} trackNameInput={trackNameInput} eventTypeInput={eventTypeInput} drivetrainTypeInput={drivetrainTypeInput} massInput={massInput} wheelbaseInput={wheelbaseInput} firmwareRevInput={firmwareRevInput} time={new Date().toDateString()}/>
             </div>
 
             <OffloadButton/>
