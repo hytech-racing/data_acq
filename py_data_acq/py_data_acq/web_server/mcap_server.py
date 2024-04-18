@@ -68,7 +68,6 @@ class MCAPServer:
         def start_recording():
             print("Start route called")
             requestData = request.get_json()
-            print(requestData)
             loop.create_task(self.start_stop_mcap_generation(input_cmd=True, metadata=requestData))
             return jsonify(message='success')
 
