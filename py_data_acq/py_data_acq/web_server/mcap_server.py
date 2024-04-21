@@ -9,6 +9,7 @@ import py_data_acq.common.protobuf_helpers as pb_helpers
 from py_data_acq.common.common_types import MCAPServerStatusQueueData, MCAPFileWriterCommand
 from typing import Any
 import os
+import threading
 
 class MCAPServer:
     def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='0.0.0.0', port=6969):
@@ -108,4 +109,5 @@ class MCAPServer:
     async def start_server(self):
         print("Starting webserver")
         app = self.create_app()
-        app.run(host=self.host, port=self.port)
+        threading.Thread(target = lambda app.run(host=self.host, port=self.port, debug=True, use_reloader=False)).start()
+        #app.run(host=self.host, port=self.port)
