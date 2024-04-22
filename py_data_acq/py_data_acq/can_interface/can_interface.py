@@ -30,7 +30,7 @@ async def continuous_can_receiver(can_msg_decoder: cantools.db.Database, message
 # the message queue here is filled with protobuf messages
 async def continuous_can_transmitter(can_db: cantools.db.Database, can_bus, message_queue_of_msgs_to_send):
     while True:
-        print("getting can transmit?")
+        
         msg_to_send = await message_queue_of_msgs_to_send.get()
         msg, data = pb_helpers.pack_cantools_msg(msg_to_send, msg_to_send.DESCRIPTOR.name, can_db)
         msg_out = can.Message(arbitration_id=msg.frame_id, is_extended_id=False, data=data)
