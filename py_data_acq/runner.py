@@ -29,13 +29,6 @@ import socket
 #      - foxglove server ip
 #      - config to inform io handler (say for different CAN baudrates)
 
-can_methods = {
-    "debug": [UdpMulticastBus.DEFAULT_GROUP_IPv4, "udp_multicast"],
-    "local_can_usb_KV": [0, "kvaser"],
-    "local_debug": ["vcan0", "socketcan"],
-}
-
-
 def find_can_interface():
     """Find a CAN interface by checking /sys/class/net/."""
     for interface in os.listdir("/sys/class/net/"):
@@ -53,7 +46,7 @@ async def write_data_to_mcap(
             try:
                 cmd_task = asyncio.create_task(writer_cmd_queue.get())
                 data_task = asyncio.create_task(data_queue.get())
-
+                
                 # wait for either data to arrive or a command to arrive
                 done, pending = await asyncio.wait(
                     [cmd_task, data_task], return_when=asyncio.FIRST_COMPLETED
@@ -62,7 +55,7 @@ async def write_data_to_mcap(
                     cmd_msg = cmd_task.result()
                     writing = cmd_msg.writing
                     if writing:
-                        await mcw.open_new_writer()
+                        await mcw.open_new_writer(cmd_msg.pb_metadata)
                         await writer_status_queue.put(MCAPServerStatusQueueData(True, mcw.actual_path))
                     else:
                         await writer_status_queue.put(MCAPServerStatusQueueData(False, mcw.actual_path))
@@ -145,10 +138,10 @@ async def run(logger):
         logger.info("detected running on nixos")
         path_to_mcap = "/home/nixos/recordings"
 
-    init_writing_on_start = True
+    init_writing_on_start = False
 
-    mcap_writer_status_queue = asyncio.Queue(maxsize=0)
-    mcap_writer_cmd_queue = asyncio.Queue(maxsize=0)
+    mcap_writer_status_queue = asyncio.Queue()
+    mcap_writer_cmd_queue = asyncio.Queue()
     mcap_writer = HTPBMcapWriter(path_to_mcap, init_writing_on_start)
     mcap_web_server = MCAPServer(
         writer_command_queue=mcap_writer_cmd_queue,
@@ -159,10 +152,10 @@ async def run(logger):
     receiver_task = asyncio.create_task(
         continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
     )
-    transmitter_task = asyncio.create_task(
-        continuous_can_transmitter(db, bus, can_out_queue)
-    )
-    vn_receiver_task = asyncio.create_task(receive_message_over_udp("127.0.0.1", 6000, queue2, queue, can_out_queue))
+    # transmitter_task = asyncio.create_task(
+    #     continuous_can_transmitter(db, bus, can_out_queue)
+    # )
+    # vn_receiver_task = asyncio.create_task(receive_message_over_udp("127.0.0.1", 6000, queue2, queue, can_out_queue))
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(
         write_data_to_mcap(
@@ -180,8 +173,8 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
     # await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task, vn_receiver_task)
-    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task, vn_receiver_task)
-    # await asyncio.gather(vn_receiver_task)
+    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
+    # await asyncio.gather(srv_task, mcap_task, receiver_task)
 
 
 if __name__ == "__main__":

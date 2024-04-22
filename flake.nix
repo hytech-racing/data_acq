@@ -152,7 +152,6 @@
           ht_can_pkg
           frontend_pkg
           protobuf
-          frontend_pkg
         ];
         shellHook =
           ''

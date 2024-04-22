@@ -85,7 +85,6 @@ class HTPBMcapWriter:
     async def write_metadata(self, name, metadata):
         self.mcap_writer_class._writer.add_metadata(name, metadata)
 
-    async def write_data(self, queue):
-        msg = await queue.get()
+    async def write_data(self, msg):
         if msg is not None:
             return await self.write_msg(msg.pb_msg)

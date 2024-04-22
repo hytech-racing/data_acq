@@ -34,6 +34,7 @@ python311Packages.buildPythonApplication {
     vn_protos_np_proto_py
     python311Packages.flask
     python311Packages.flask-cors
+    python311Packages.hypercorn
   ];
 
   src = ./py_data_acq;

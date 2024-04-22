@@ -9,7 +9,8 @@ import py_data_acq.common.protobuf_helpers as pb_helpers
 from py_data_acq.common.common_types import MCAPServerStatusQueueData, MCAPFileWriterCommand
 from typing import Any
 import os
-import threading
+from hypercorn.config import Config
+from hypercorn.asyncio import serve
 
 class MCAPServer:
     def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='0.0.0.0', port=6969):
@@ -41,18 +42,19 @@ class MCAPServer:
         return self.stop_mcap_generation()
 
     async def start_stop_mcap_generation(self, input_cmd: bool, metadata=None):
-        logging.log("Starting/Stopping MCAP generation")
+        # logging.log("Starting/Stopping MCAP generation")
         await self.cmd_queue.put(MCAPFileWriterCommand(input_cmd, metadata))
-        logging.log("MCAP command put in queue")
+        # logging.log("MCAP command put in queue")
         while True:
             # Wait for the next message from the queue
+            # logging.log("getting start stop")
             message = await self.status_queue.get()
             if message.is_writing:
-                logging.log("Writing message to MCAP file")
+                # logging.log("Writing message to MCAP file")
                 self.is_writing = True
                 self.mcap_status_message = f"An MCAP file is being written: {message.writing_file}"
             else:
-                logging.log("Not Writing message to MCAP file")
+                # logging.log("Not Writing message to MCAP file")
                 self.is_writing = False
                 self.mcap_status_message = f"No MCAP file is being written."
                 # Important: Mark the current task as done to allow the queue to proceed
@@ -109,5 +111,6 @@ class MCAPServer:
     async def start_server(self):
         print("Starting webserver")
         app = self.create_app()
-        threading.Thread(target = lambda app.run(host=self.host, port=self.port, debug=True, use_reloader=False)).start()
-        #app.run(host=self.host, port=self.port)
+        config = Config()
+        config.bind = [f"{self.host}:{self.port}"]  # Set the bind address
+        await serve(app, config)

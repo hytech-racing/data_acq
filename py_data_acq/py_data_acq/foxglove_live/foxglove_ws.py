@@ -40,6 +40,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
 
     async def send_msgs_from_queue(self, queue: asyncio.Queue[QueueData]):
         try:
+            print("getting")
             data = await queue.get()
             if data is not None:
                 await super().send_message(self.chan_id_dict[data.name], time.time_ns(), data.data)
