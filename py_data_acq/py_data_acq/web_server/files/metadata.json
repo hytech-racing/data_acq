@@ -7,14 +7,7 @@
         "dropdown": false,
         "automatic": false
     },
-    {
-        "name": "time",
-        "displayName": "Time",
-        "type": "string",
-        "required": true,
-        "dropdown": false,
-        "automatic": true
-    },
+    
     {
         "name": "testingGoal",
         "displayName": "Testing Goal",

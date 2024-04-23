@@ -55,7 +55,7 @@ export function StartStopButton({fields, data, recording, setRecording}) {
             body += '"' + fields[i].name + '":' + JSON.stringify(data[i])
             body += ', '
         }
-        body += '"time":' + new Date().toString()
+        body += '"time":' + (new Date()).toString()
         body += " }"
 
         const fetchResponse = await fetch(webserverURL + '/start', {
