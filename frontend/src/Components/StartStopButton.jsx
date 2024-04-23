@@ -25,7 +25,6 @@ export function StartStopButton({fields, data, recording, setRecording}) {
         }
         return ret
     }
-    
 
     const webserverURL = 'http://localhost:6969'
 
