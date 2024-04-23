@@ -25,6 +25,7 @@ export function StartStopButton({fields, data, recording, setRecording}) {
         }
         return ret
     }
+    
 
     const webserverURL = 'http://localhost:6969'
 
@@ -44,6 +45,7 @@ export function StartStopButton({fields, data, recording, setRecording}) {
         const status = fetchResponse.status
         return status === 200
     }
+
 
     async function startRecording() {
         if(waitingForResponse) {
