@@ -54,12 +54,13 @@ export function StartStopButton({fields, data, recording, setRecording}) {
 
         let body = "{ "
         for(let i = 0; i < data.length; i++) {
+            console.log("HERE" + str(i))
             body += '"' + fields[i].name + '":' + JSON.stringify(data[i])
             body += ', '
         }
-        body += '"time":' + (new Date()).toString()
+        body += '"time":"' + (new Date()).toString()+'"'
         body += " }"
-
+        console.log(body)
         const fetchResponse = await fetch(webserverURL + '/start', {
             method: 'POST',
             body: body,
