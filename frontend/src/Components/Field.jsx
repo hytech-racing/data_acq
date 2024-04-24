@@ -2,9 +2,9 @@ import React from 'react';
 import {TextForm} from "./TextForm";
 
 export function Field({fields, data, setData, index, recording}) {
-
+    
     function getField() {
-        console.log(JSON.stringify(fields[index]))
+        //console.log(JSON.stringify(fields[index]))
         if (fields[index] === undefined) {
             return (<></>)
         } else if (fields[index].automatic) {

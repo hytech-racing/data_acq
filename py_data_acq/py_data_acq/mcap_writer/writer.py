@@ -62,6 +62,7 @@ class HTPBMcapWriter:
         dt = dt.strftime("%Y-%m-%d-T%H-%M-%S")
         date_time_filename = dt+ ".mcap" 
         print(os.path.join(self.base_path, date_time_filename))
+        print(metadata)
 
         self.actual_path = os.path.join(self.base_path, date_time_filename)
         self.writing_file = open(self.actual_path, "wb")
