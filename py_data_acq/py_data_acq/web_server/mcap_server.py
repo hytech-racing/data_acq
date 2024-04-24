@@ -13,7 +13,7 @@ from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
 class MCAPServer:
-    def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='0.0.0.0', port=6969):
+    def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='192.168.203.1', port=6969):
         self.host = host
         self.port = port
         

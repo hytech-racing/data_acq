@@ -26,7 +26,7 @@ export function StartStopButton({fields, data, recording, setRecording}) {
         return ret
     }
 
-    const webserverURL = 'http://0.0.0.0:6969'
+    const webserverURL = 'http://192.168.203.1:6969'
 
     async function stopRecording() {
         if(waitingForResponse) {
