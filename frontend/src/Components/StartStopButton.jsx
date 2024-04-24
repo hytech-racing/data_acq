@@ -26,7 +26,7 @@ export function StartStopButton({fields, data, recording, setRecording}) {
         return ret
     }
 
-    const webserverURL = 'http://localhost:6969'
+    const webserverURL = 'http://0.0.0.0:6969'
 
     async function stopRecording() {
         if(waitingForResponse) {
@@ -53,7 +53,6 @@ export function StartStopButton({fields, data, recording, setRecording}) {
 
         let body = "{ "
         for(let i = 0; i < data.length; i++) {
-            console.log("HERE" + str(i))
             body += '"' + fields[i].name + '":' + JSON.stringify(data[i])
             body += ', '
         }
