@@ -1,5 +1,6 @@
 import React from 'react';
 import {TextForm} from "./TextForm";
+import {FieldTitle} from "./FieldComponents/FieldTitle";
 
 export function Field({fields, data, setData, index, recording}) {
     
@@ -18,6 +19,7 @@ export function Field({fields, data, setData, index, recording}) {
 
     return (
         <>
+            <FieldTitle fields={fields} index={index}/>
             {getField()}
         </>
     )
