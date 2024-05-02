@@ -35,7 +35,7 @@ export function EditSSOT({}) {
         try {
             const fetchResponse = await fetch(getURL('saveFields', useLocalhost), {
                 method: 'POST',
-                body: JSON.stringify(metadata),
+                body: JSON.stringify(JSON.parse(metadata), null, 4),
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json'
