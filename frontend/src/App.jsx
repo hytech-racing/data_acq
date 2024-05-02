@@ -12,7 +12,7 @@ function App() {
                 <Route path={"/"}>
                     <Route index element={<MCAPRecorder/>}/>
                     <Route path={"files"} element={<Files/>}/>
-                    <Route path={"metadata"} element={<EditSSOT/>}/>
+                    <Route path={"ssot"} element={<EditSSOT/>}/>
                 </Route>
             </Routes>
         </BrowserRouter>
