@@ -155,7 +155,7 @@ class MCAPServer:
 
         return app
 
-        @app.route('/saveFields', methods=['GET'])
+        @app.route('/saveFields', methods=['POST'])
         def saveFields():
             newFields = request.get_json()
             try:
