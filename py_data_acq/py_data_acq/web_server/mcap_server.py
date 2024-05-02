@@ -153,11 +153,9 @@ class MCAPServer:
             except FileNotFoundError:
                 return jsonify({'error': 'File not found'}), 400
 
-        return app
-
         @app.route('/saveFields', methods=['POST'])
         def saveFields():
-            newFields = request.get_json()
+            newFields = json.loads(request.data, strict = False)
             try:
                 if os.path.exists("/etc/nixos"):
                     with open (os.path.join(self.metadata_filepath, "metadata.json"), "w") as f:
@@ -169,6 +167,8 @@ class MCAPServer:
                     return jsonify(message='success')
             except FileNotFoundError:
                 return jsonify({'error': 'File not found'}), 400
+        
+        return app
 
     async def start_server(self):
         print("Starting webserver")
