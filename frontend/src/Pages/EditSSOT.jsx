@@ -34,7 +34,8 @@ export function EditSSOT({}) {
     async function saveMetadata() {
         try {
             const fetchResponse = await fetch(getURL('saveFields', useLocalhost), {
-                method: 'GET',
+                method: 'POST',
+                body: JSON.stringify(JSON.stringify(JSON.parse(metadata), null, 4)),
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json'
