@@ -122,6 +122,7 @@ class MCAPServer:
             return jsonify(message='success')
 
 
+        @app.route('/check_offload', methods=['GET'])
         def checkOffloadedMCAPS():
             path_to_mcap = "."
             if os.path.exists("/etc/nixos"):
@@ -137,6 +138,17 @@ class MCAPServer:
             queryString = queryString[:-1]
             response = requests.get(awsServerURL + '/get_offloaded_mcaps?' + queryString)
             return response.json()
+
+        @app.route('/all_files', methods=['GET'])
+        def getAllFiles():
+            path_to_mcap = "."
+            if os.path.exists("/etc/nixos"):
+                path_to_mcap = "/home/nixos/recordings"
+            ret = []
+            for filename in os.listdir(path_to_mcap):
+                if filename.endswith(".mcap"):
+                    ret.append(filename)
+            return jsonify(ret)
 
         
         @app.route('/fields', methods=['GET'])
