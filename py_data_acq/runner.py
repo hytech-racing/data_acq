@@ -178,8 +178,8 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
     # await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task, vn_receiver_task)
-    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
-    # await asyncio.gather(srv_task, mcap_task, receiver_task)
+    # await asyncio.gather(receiver_task)
+    await asyncio.gather(srv_task, mcap_task, receiver_task)
 
 
 if __name__ == "__main__":

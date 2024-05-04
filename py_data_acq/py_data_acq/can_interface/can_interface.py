@@ -22,6 +22,7 @@ async def continuous_can_receiver(can_msg_decoder: cantools.db.Database, message
             await queue.put(data)
             await q2.put(data)
         except Exception as e:
+            print("uh")
             pass
 
     # Don't forget to stop the notifier to clean up resources.

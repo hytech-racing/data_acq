@@ -10,7 +10,7 @@
     mcap.url = "github:RCMast3r/py_mcap_nix";
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
-    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/41";
+    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/80";
     nix-proto = { url = "github:notalltim/nix-proto"; };
   };
 
@@ -60,7 +60,9 @@
         frontend_pkg = final.callPackage ./frontend.nix { };
       };
 
-
+      # mcap_cli_overlay = final: prev: {
+      #   mcap_cli_pkg = final.callPackage ./mcap_cli.nix { };
+      # };
 
       nix_protos_overlays = nix-proto.generateOverlays'
         {
@@ -100,6 +102,7 @@
         py_foxglove_protobuf_schemas_overlay
         frontend_config_overlay
         frontend_overlay
+        # mcap_cli_overlay 
         ht_can_pkg_flake.overlays.default
         mcap-protobuf.overlays.default
         mcap.overlays.default
@@ -119,6 +122,7 @@
         packages = with pkgs; [
           jq
           py_data_acq_pkg
+          # mcap_cli_pkg 
           py_dbc_proto_gen_pkg
           proto_gen_pkg
           ht_can_pkg
@@ -178,6 +182,7 @@
       };
 
       packages = rec {
+        mcap_cli_pkg = pkgs.mcap_cli_pkg;
         frontend_config_pkg = pkgs.frontend_config_pkg;
         frontend_pkg = pkgs.frontend_pkg.frontend;
         default = pkgs.py_data_acq_pkg;
