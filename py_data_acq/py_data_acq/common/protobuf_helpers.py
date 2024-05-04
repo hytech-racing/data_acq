@@ -25,7 +25,7 @@ def pack_protobuf_msg(cantools_dict: dict, msg_name: str, message_classes):
         pb_msg = message_classes[msg_name]()
     for key in cantools_dict.keys():
         if(type(cantools_dict[key]) is namedsignalvalue.NamedSignalValue):
-            print(msg_name)
+            # print(msg_name)
             setattr(pb_msg, key, str(cantools_dict[key].value))
         else:
             setattr(pb_msg, key, cantools_dict[key])
@@ -43,10 +43,18 @@ def pack_cantools_msg(pb_msg_in, msg_name: str, cantools_db):
 
     # 2. populate dict with values 
     msg_dict = {}
+    # print("message signals: ", msg_sigs)
+    
     for sig in msg_sigs:
-        print(sig)
-        msg_dict[sig.name] = getattr(pb_msg_in, sig.name)
-    
-    
+        # print("sig name ", sig.name)
+        # print(dir(pb_msg_in))
+        if(sig.choices is not None):
+            msg_dict[sig.name] = int(getattr(pb_msg_in, sig.name))
+        else:
+            # print(dir(pb_msg_in))
+            # print(getattr(pb_msg_in, sig.name))
+            msg_dict[sig.name] = getattr(pb_msg_in, sig.name)
+    # print(msg_out)
+
     out_data = msg_out.encode(msg_dict)
     return msg_out, out_data

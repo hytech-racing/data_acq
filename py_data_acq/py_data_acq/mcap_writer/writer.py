@@ -58,9 +58,9 @@ class HTPBMcapWriter:
             self.mcap_writer_class.finish()
             self.writing_file.close()
 
-        dt = datetime.strptime(str(metadata["time"])[:24], "%a %b %d %Y %H:%M:%S")
-        dt = dt.strftime("%Y-%m-%d-T%H-%M-%S")
-        date_time_filename = dt+ ".mcap" 
+        #dt = datetime.strptime(str(metadata["time"])[:24], "%a %b %d %Y %H:%M:%S")
+        #dt = dt.strftime("%Y-%m-%d-T%H-%M-%S")
+        date_time_filename = str(metadata["time"])+".mcap"
         print(os.path.join(self.base_path, date_time_filename))
         print(metadata)
 
@@ -68,11 +68,10 @@ class HTPBMcapWriter:
         self.writing_file = open(self.actual_path, "wb")
         self.mcap_writer_class = Writer(self.writing_file)
 
-        if metadata is not None:
-            await self.write_metadata("setup", metadata)
+        #if metadata is not None:
+        #    await self.write_metadata("setup", metadata)
 
         self.is_writing = True
-
         return True
 
     async def write_msg(self, msg):

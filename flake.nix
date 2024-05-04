@@ -10,7 +10,7 @@
     mcap.url = "github:RCMast3r/py_mcap_nix";
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
-    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/41";
+    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/80";
     nix-proto = { url = "github:notalltim/nix-proto"; };
   };
 
@@ -49,6 +49,9 @@
       proto_gen_overlay = final: prev: {
         proto_gen_pkg = final.callPackage ./dbc_proto_bin_gen.nix { };
       };
+      frontend_config_overlay = final: prev: {
+        frontend_config_pkg = final.callPackage ./frontend_metadata.nix { };
+      };
       py_foxglove_protobuf_schemas_overlay = final: prev: {
         py_foxglove_protobuf_schemas = final.callPackage ./py_foxglove_protobuf_schemas.nix { };
       };
@@ -57,7 +60,9 @@
         frontend_pkg = final.callPackage ./frontend.nix { };
       };
 
-
+      # mcap_cli_overlay = final: prev: {
+      #   mcap_cli_pkg = final.callPackage ./mcap_cli.nix { };
+      # };
 
       nix_protos_overlays = nix-proto.generateOverlays'
         {
@@ -95,8 +100,9 @@
         py_data_acq_overlay
         proto_gen_overlay
         py_foxglove_protobuf_schemas_overlay
-
+        frontend_config_overlay
         frontend_overlay
+        # mcap_cli_overlay 
         ht_can_pkg_flake.overlays.default
         mcap-protobuf.overlays.default
         mcap.overlays.default
@@ -116,6 +122,7 @@
         packages = with pkgs; [
           jq
           py_data_acq_pkg
+          # mcap_cli_pkg 
           py_dbc_proto_gen_pkg
           proto_gen_pkg
           ht_can_pkg
@@ -137,6 +144,7 @@
             export BIN_PATH=$bin_path
             export DBC_PATH=$dbc_path
             export FRONT=$frontend_path
+            export METADATA_PATH=${pkgs.frontend_config_pkg}
             echo -e "PYTHONPATH=$PYTHONPATH\nBIN_PATH=$bin_path\nDBC_PATH=$dbc_path\n" > .env
             export PS1="$(echo -e '\u${icon}') {\[$(tput sgr0)\]\[\033[38;5;228m\]\w\[$(tput sgr0)\]\[\033[38;5;15m\]} (${name}) \\$ \[$(tput sgr0)\]"
           '';
@@ -158,8 +166,10 @@
             path=${pkgs.proto_gen_pkg}
             bin_path=$path"/bin"
             dbc_path=${pkgs.ht_can_pkg}
+            metadata_path=${pkgs.frontend_config_pkg}
             export BIN_PATH=$bin_path
             export DBC_PATH=$dbc_path
+            export METADATA_PATH=$metadata_path
           '';
 
       };
@@ -172,6 +182,8 @@
       };
 
       packages = rec {
+        mcap_cli_pkg = pkgs.mcap_cli_pkg;
+        frontend_config_pkg = pkgs.frontend_config_pkg;
         frontend_pkg = pkgs.frontend_pkg.frontend;
         default = pkgs.py_data_acq_pkg;
         py_dbc_proto_gen_pkg = pkgs.py_data_acq_pkg;

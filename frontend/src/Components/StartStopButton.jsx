@@ -1,8 +1,14 @@
 import React from "react";
+import { useState } from "react";
+import {getURL} from "../Util/ServerAddrUtil";
+import {getFormattedDate} from "../Util/DateUtil";
+import {getMetadata} from "../Util/DataUtil";
+import {wait} from "@testing-library/user-event/dist/utils";
 
-export function StartStopButton({fields, data, recording, setRecording}) {
+export function StartStopButton({fields, data, recording, setRecording, useLocalhost}) {
 
-    var waitingForResponse = false
+    const [time, setTime] = useState("");
+    const [waitingForResponse, setWaitingForResponse] = useState(false);
 
     function getButtonStyle() {
         return recording ? "btn btn-error" : "btn btn-success"
@@ -12,56 +18,43 @@ export function StartStopButton({fields, data, recording, setRecording}) {
         return recording ? "Stop Recording" : "Start Recording"
     }
 
-    function isDisabled() {
-        if (waitingForResponse) {
-            return true
-        }
-        let ret = false
-        for (let i = 0; i < data.length; i++) {
-            if(data[i] === undefined || data[i] === null) {
-                ret = true
-                break
-            }
-        }
-        return ret
-    }
-
-    const webserverURL = 'http://192.168.203.1:6969'
-    //const webserverURL = 'http://0.0.0.0:6969'
 
     async function stopRecording() {
         if(waitingForResponse) {
             return false
         }
-        waitingForResponse = true
-        const fetchResponse = await fetch(webserverURL + '/stop', {
+
+        setWaitingForResponse(true);
+
+        let body = getMetadata(fields, data, time)
+
+        const fetchResponse = await fetch(getURL('stop', useLocalhost), {
             method: 'POST',
+            body: body,
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
             }
         })
-        waitingForResponse = false
+        setWaitingForResponse(false);
         const status = fetchResponse.status
+        if (status === 200) {
+            alert("Stopped writing to " + time + ".mcap");
+        }
         return status === 200
     }
-
 
     async function startRecording() {
         if(waitingForResponse) {
             return false
         }
+        setWaitingForResponse(true);
 
-        let body = "{ "
-        
-        for(let i = 0; i < data.length; i++) {
-            body += '"' + fields[i].name + '":' + JSON.stringify(data[i])
-            body += ', '
-        }
-        body += '"time":"' + (new Date()).toString()+'"'
-        body += " }"
-        console.log(body)
-        const fetchResponse = await fetch(webserverURL + '/start', {
+        let body = '{ "time": ' + JSON.stringify(getFormattedDate()) + '}'
+        // Creating the formatted date string
+        const formattedDate = getFormattedDate()
+        setTime(formattedDate)
+        const fetchResponse = await fetch(getURL('start', useLocalhost), {
             method: 'POST',
             body: body,
             headers: {
@@ -70,8 +63,11 @@ export function StartStopButton({fields, data, recording, setRecording}) {
             }
         })
 
-        waitingForResponse = false
+        setWaitingForResponse(false);
         const status = fetchResponse.status
+        if (status === 200) {
+            setTime(formattedDate)
+        }
         return status === 200
     }
 
@@ -90,9 +86,18 @@ export function StartStopButton({fields, data, recording, setRecording}) {
     }
 
     return (
-        <button className={getButtonStyle()} onClick={toggleRecording} disabled={isDisabled()}>
-            {getButtonText()}
-        </button>
+        <div className="centered-container">
+            {recording && (
+                <article className={"prose"}>
+                    <p>
+                        Recording: {time}.mcap
+                    </p>
+                </article>
+            )}
+            <button className={getButtonStyle()} onClick={toggleRecording} disabled={waitingForResponse}>
+                {getButtonText()}
+            </button>
+        </div>
     )
 
 }

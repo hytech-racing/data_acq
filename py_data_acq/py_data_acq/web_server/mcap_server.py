@@ -11,16 +11,19 @@ from typing import Any
 import os
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
+import requests
+
+awsServerURL = 'http://54.243.4.174:8080'
 
 class MCAPServer:
-    def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='192.168.203.1', port=6969):
+    def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='0.0.0.0', port=6969, metadata_filepath=''):
         self.host = host
         self.port = port
         
         self.is_writing = init_writing
         self.cmd_queue = writer_command_queue
         self.status_queue = writer_status_queue
-        
+        self.metadata_filepath = metadata_filepath
         if(init_writing):
             self.is_writing = True
             self.mcap_status_message = f"An MCAP file is being written: {init_filename}"
@@ -70,42 +73,101 @@ class MCAPServer:
         @app.route('/start', methods=['POST'])
         def start_recording():
             print("Start route called")
+            print(request)
+            print(type(request))
+            print(request.get_json())
             requestData = request.get_json()
             loop.create_task(self.start_stop_mcap_generation(input_cmd=True, metadata=requestData))
             return jsonify(message='success')
 
         @app.route('/stop', methods=['POST'])
         def stop_recording():
-            loop.create_task(self.start_stop_mcap_generation(input_cmd=False))
+            print("Stop route called")
+            requestData = request.get_json()
+            loop.create_task(self.start_stop_mcap_generation(input_cmd=False, metadata=requestData))
             return jsonify(message='success')
 
         @app.route('/offload', methods=['POST'])
         def offload_data():
-            # os.system("rsync -a ~/recordings urname@192.168.1.101:~/destination/of/data")
-            return jsonify()
-        
-        @app.route('/read/<type>', methods=['POST'])
-        def read(type):
-            valid_types = ["drivers", "trackNames", "eventTypes"]
-            if (type not in valid_types):
-                return jsonify(f"Type must be one of: {', '.join(valid_types)}")
-            fileName = type + ".txt"
-            with open (os.getcwd() +"/py_data_acq/py_data_acq/web_server/"+fileName, "r") as myfile:
-                data = myfile.read().splitlines()
-            
-                
-            return jsonify(data)
-        
-        @app.route('/write/<type>', methods=['POST'])
-        def write(type):
-            valid_types = ["drivers", "trackNames", "eventTypes"]
-            if (type not in valid_types):
-                return jsonify(f"Type must be one of: {', '.join(valid_types)}")
-            fileName = type + ".txt"
-            with open (os.getcwd() +"/py_data_acq/py_data_acq/web_server/"+fileName, "a") as myfile:
-                myfile.write(request.get_json()["value"]+ '\n')
-            return jsonify()
+            path_to_mcap = "."
+            if os.path.exists("/etc/nixos"):
+                path_to_mcap = "/home/nixos/recordings"
+            offload_data = checkOffloadedMCAPS()
+            not_offloaded = (offload_data["not_offloaded"])
+            print(not_offloaded)
+            for filename in not_offloaded:
+                if (os.path.exists(path_to_mcap + "/" + filename)):
+                    MCAPfile = {'file': open(path_to_mcap + "/" + filename, 'rb')}
+                    response = requests.post(awsServerURL + '/save_run', files = MCAPfile)
+                    #print(response)
+                    print(filename + " uploaded")
+                else:
+                    print("MCAP File directory , " + path_to_mcap + "/" + filename + " not found.")
+            return jsonify(message='success')
 
+        @app.route('/delete', methods=['POST'])
+        def delete_data():
+            path_to_mcap = "."
+            if os.path.exists("/etc/nixos"):
+                path_to_mcap = "/home/nixos/recordings"
+            offload_data = checkOffloadedMCAPS()
+            offloaded = (offload_data["offloaded"])
+            for filename in offloaded:
+                filePath = path_to_mcap + "/" + filename
+                if os.path.exists(filePath):
+                    os.remove(filePath) # one file at a time
+                    print("Deleted " + filename)
+                else:
+                    print("MCAP File directory , " + filePath + " not found.")
+            return jsonify(message='success')
+
+
+        def checkOffloadedMCAPS():
+            path_to_mcap = "."
+            if os.path.exists("/etc/nixos"):
+                path_to_mcap = "/home/nixos/recordings"
+            queryParams = []
+            for filename in os.listdir(path_to_mcap):
+                if filename.endswith(".mcap"):
+                    queryParams.append(filename)
+            #queryParams = ["03_26_2024_23_10_23 1.mcap", "file2.mcap", "file3.mcap"] #for testing only
+            queryString = ""
+            for fileName in queryParams:
+                queryString += "file=" + fileName + "&"
+            queryString = queryString[:-1]
+            response = requests.get(awsServerURL + '/get_offloaded_mcaps?' + queryString)
+            return response.json()
+
+        
+        @app.route('/fields', methods=['GET'])
+        def getJSON():
+            try:
+                if os.path.exists("/etc/nixos"):
+                    with open (os.path.join(self.metadata_filepath, "metadata.json"), "r") as f:
+                        data = json.load(f)
+                    return jsonify(data)
+                else:
+                    with open (os.getcwd() +"/frontend_config/metadata.json", "r") as f:
+                        data = json.load(f)
+                    return jsonify(data)
+            except FileNotFoundError:
+                return jsonify({'error': 'File not found'}), 400
+
+        @app.route('/saveFields', methods=['POST'])
+        def saveFields():
+            newFields = json.loads(request.data, strict = False)
+            try:
+                if os.path.exists("/etc/nixos"):
+                    with open (os.path.join(self.metadata_filepath, "metadata.json"), "w") as f:
+                        f.write(newFields)
+                    return jsonify(message='success')
+                else:
+                    with open (os.getcwd() + "/frontend_config/metadata.json", "w") as f:
+                        f.write(newFields)
+                    return jsonify(message='success')
+            except FileNotFoundError:
+                return jsonify({'error': 'File not found'}), 400
+        
         return app
 
     async def start_server(self):

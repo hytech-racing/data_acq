@@ -59,6 +59,7 @@ async def write_data_to_mcap(
                         await writer_status_queue.put(MCAPServerStatusQueueData(True, mcw.actual_path))
                     else:
                         await writer_status_queue.put(MCAPServerStatusQueueData(False, mcw.actual_path))
+                        await mcw.write_metadata("setup", cmd_msg.pb_metadata)
                         await mcw.close_writer()
                     # Now we can cancel the other task as it's no longer needed
                     data_task.cancel()
@@ -117,13 +118,16 @@ async def run(logger):
     can_out_queue = asyncio.Queue()
     path_to_bin = ""
     path_to_dbc = ""
+    path_to_metadata_config = ""
 
     if len(sys.argv) > 2:
         path_to_bin = sys.argv[1]
         path_to_dbc = sys.argv[2]
+        path_to_metadata_config = sys.argv[3]
     else:
         path_to_bin = os.environ.get("BIN_PATH")
         path_to_dbc = os.environ.get("DBC_PATH")
+        path_to_metadata_config = os.environ.get("METADATA_PATH")
 
     full_path = os.path.join(path_to_bin, "hytech.bin")
     full_path_to_dbc = os.path.join(path_to_dbc, "hytech.dbc")
@@ -148,6 +152,7 @@ async def run(logger):
         writer_status_queue=mcap_writer_status_queue,
         init_writing=init_writing_on_start,
         init_filename=mcap_writer.actual_path,
+        metadata_filepath=path_to_metadata_config
     )
     receiver_task = asyncio.create_task(
         continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
@@ -173,8 +178,8 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
     # await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task, vn_receiver_task)
-    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
-    # await asyncio.gather(srv_task, mcap_task, receiver_task)
+    # await asyncio.gather(receiver_task)
+    await asyncio.gather(srv_task, mcap_task, receiver_task)
 
 
 if __name__ == "__main__":
