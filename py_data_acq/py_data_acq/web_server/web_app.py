@@ -46,7 +46,7 @@ class WebApp:
     
     async def start_stop_mcap_generation(self, input_cmd: bool):
         # logging.log("Starting/Stopping MCAP generation")
-        await self.cmd_queue.put(MCAPFileWriterCommand(input_cmd))
+        # await self.cmd_queue.put(MCAPFileWriterCommand(input_cmd))
         # logging.log("MCAP command put in queue")
             # Wait for the next message from the queue
             # logging.log("getting start stop")
@@ -71,9 +71,11 @@ class WebApp:
             if request.method == 'POST':
                 if 'action' in request.form:
                     action = request.form['action']
+                    cmd = False
                     if action == 'start':
+
                         file_name = await self.start_stop_mcap_generation(input_cmd=True)
-                        self.recordings.append({'status': 'started','filename': file_name })
+                        self.recordings.append({'status': 'started', 'filename': file_name})
                     elif action == 'stop':
                         file_name = await self.start_stop_mcap_generation(input_cmd=False)
                         self.recordings.append({'status': 'stopped', 'filename': file_name})
