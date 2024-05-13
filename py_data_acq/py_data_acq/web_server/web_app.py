@@ -2,7 +2,7 @@ import logging
 import asyncio
 from flask import Flask, request, render_template
 from flask_cors import CORS
-from py_data_acq.common.common_types import MCAPServerStatusQueueData, MCAPFileWriterCommand
+from py_data_acq.common.common_types import QueueData, MCAPServerStatusQueueData, MCAPFileWriterCommand
 from typing import Any
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
@@ -23,12 +23,14 @@ class WebApp:
         _ = await self.start_stop_mcap_generation(input_cmd=False)
         
 
-    def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='localhost', port=20000, parameters=dict()):
+    def __init__(self, writer_command_queue: asyncio.Queue, writer_status_queue: asyncio.Queue, general_command_queue: asyncio.Queue, init_writing= True, init_filename = '.',host='localhost', port=20000, parameters=dict()):
         self.recordings = []
         self.host = host
         self.port = port
+
         self.parameters = parameters    
         self.is_writing = init_writing
+        self.general_command_queue = general_command_queue
         self.cmd_queue = writer_command_queue
         self.status_queue = writer_status_queue
         self.attempting_start_stop = False
@@ -38,7 +40,10 @@ class WebApp:
         else:
             self.is_writing = False
             self.mcap_status_message = "No MCAP file is being written."
-    
+    async def handle_interface_command(self, out_queue: asyncio.Queue[QueueData], proto_msg):
+        msg = QueueData(proto_msg.DESCRIPTOR.name, proto_msg)
+        await out_queue.put(msg)
+
     async def start_stop_mcap_generation(self, input_cmd: bool, cmd_queue, status_queue):
         # logging.log("Starting/Stopping MCAP generation")
         self.attempting_start_stop = True

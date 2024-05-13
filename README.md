@@ -89,22 +89,53 @@ output:
     - once both the data writer and the foxglove websocket have finished processing the data delete the data from the container
 - a desired workflow is that it all we need to do to add a new input that we will be seeing over the wire is to add a .proto to a specific folder. No code changes should be required.
 
+previous flow:
 ```mermaid
+
 flowchart TD
-    CAN[RPI CAN] --> py_async_q[encoded CAN data]
-    py_async_q --> des[DBC based CAN parser] 
-    des --> pb_pack[protobuf packet creation]
-    
-    pb_pack --> data_q1[webserver protobuf packet queue]
-    pb_pack --> data_q2[MCAP file writer protobuf packet queue]
-    subgraph websocket thread
-        data_q1 --> enc[serialize into protobuf packet]
-        enc --> py_foxglove[foxglove server websocket]
+    CAN -- raw CAN message --> dec[CAN decode and pb msg encode]
+    UDP-s[udp socket recv port] --union oneof type msg--> packet_mux[oneof message de-mux]
+
+    subgraph web interface
+        
+            
+            web_interface[frontend website] -- param change ---> pb_msg[param pb msg]
+            web_interface -- some other command --> pb_msg_other[other command pb msg ...]
+            web_interface -- recorder commands --> mcap_rec_command_queue    
+            pb_msg_other ---> message_packer[pb message serialization handler]
+            pb_msg --> message_packer
+        end
+        
+    subgraph data acquisition
+
+        
+        mcap_rec_command_queue --> mcap_file_writer
+        packet_mux -- encoded raw pb received msg --> enqueue
+        enqueue -- decoded param pb message -----> web_interface
+        %% packet_mux -- decoded pb msg --> mcap_rec_q[mcap recorder queue]
+        
+        mcap_rec_q --> mcap_file_writer
+        enqueue --all decoded pb msg--> mcap_rec_q[mcap recorder queue]
+        enqueue --all encoded pb msg--> live_qlive_q[live pb msg queue]
+        
+        
+        dec -- encoded pb received CAN msg  --> enqueue[enqueue handler]
+        %% dec --decoded pb msg--> mcap_rec_q
+        %% dec --encoded pb msg--> live_q
+
+        
+        live_qlive_q --> foxglove-websocket
+        
+        pb_msg -- encoded param pb msg --> enqueue
+        pb_msg_other -- encoded command pb msg --> enqueue
+        
     end
-    subgraph file writer thread
-        data_q2 --> py_mcap[MCAP file writer]
-    end
+    message_packer -- oneof union message --> udp_send[udp send socket port]
+    mcap_file_writer--> mcap_file[mcap file on car]
+    foxglove-websocket --> fxglv[user foxglove studio viz]
 ```
+
+
 
 ### notes:
 - filter journalctl based on service: `journalctl -u nginx.service`

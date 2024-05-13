@@ -38,7 +38,6 @@ def find_can_interface():
             return interface
     return None
 
-
 async def continuous_can_receiver(
     can_msg_decoder: cantools.db.Database, message_classes, queue, q2, can_bus
 ):

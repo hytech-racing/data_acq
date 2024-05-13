@@ -24,6 +24,9 @@ class SocketInterface:
         # await self.close_sockets()
     def __init__(self, port_to_pb_map) -> None:
         self.port_to_type_map = port_to_pb_map
+
+    # receives the udp data and outputs the data into the passed in output queues
+    # 
     async def receive_message_over_udp(self, addr: str, port: int, output_queues: list[asyncio.Queue[QueueData]]):
         sock = await asyncudp.create_socket(local_addr=(addr, port))
         while True:
