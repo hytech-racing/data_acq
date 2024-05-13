@@ -1,14 +1,9 @@
 import logging
-import socket
 import asyncio
-import json
-from py_data_acq.mcap_writer.writer import HTPBMcapWriter
 from flask import Flask, request, render_template
 from flask_cors import CORS
-import py_data_acq.common.protobuf_helpers as pb_helpers
 from py_data_acq.common.common_types import MCAPServerStatusQueueData, MCAPFileWriterCommand
 from typing import Any
-import os
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
@@ -36,7 +31,7 @@ class WebApp:
         self.is_writing = init_writing
         self.cmd_queue = writer_command_queue
         self.status_queue = writer_status_queue
-        
+        self.attempting_start_stop = False
         if(init_writing):
             self.is_writing = True
             self.mcap_status_message = f"An MCAP file is being written: {init_filename}"
@@ -44,13 +39,12 @@ class WebApp:
             self.is_writing = False
             self.mcap_status_message = "No MCAP file is being written."
     
-    async def start_stop_mcap_generation(self, input_cmd: bool):
+    async def start_stop_mcap_generation(self, input_cmd: bool, cmd_queue, status_queue):
         # logging.log("Starting/Stopping MCAP generation")
-        # await self.cmd_queue.put(MCAPFileWriterCommand(input_cmd))
+        self.attempting_start_stop = True
+        await cmd_queue.put(MCAPFileWriterCommand(input_cmd))
         # logging.log("MCAP command put in queue")
-            # Wait for the next message from the queue
-            # logging.log("getting start stop")
-        # message = await self.status_queue.get()
+            # message = await status_q.get()
 
         message = MCAPServerStatusQueueData(input_cmd, "yeet")
         if message.is_writing:
@@ -59,6 +53,7 @@ class WebApp:
             # logging.log("Not Writing message to MCAP file")
             self.is_writing = False
             # self.mcap_status_message = f"No MCAP file is being written."
+        self.attempting_start_stop = False 
         return message.writing_file
     
     async def create_app(self):
@@ -69,15 +64,13 @@ class WebApp:
         @app.route('/', methods=['GET', 'POST'])
         async def index():
             if request.method == 'POST':
-                if 'action' in request.form:
+                if 'action' in request.form and not self.attempting_start_stop:
                     action = request.form['action']
-                    cmd = False
                     if action == 'start':
-
-                        file_name = await self.start_stop_mcap_generation(input_cmd=True)
+                        file_name = await self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'started', 'filename': file_name})
                     elif action == 'stop':
-                        file_name = await self.start_stop_mcap_generation(input_cmd=False)
+                        file_name = await self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'stopped', 'filename': file_name})
                 else:  
                     # Update parameters dynamically
