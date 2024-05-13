@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recording and Parameter Interface</title>
+    <style>
+        .container {
+            display: flex;
+        }
+        .recording-control, .parameter-control {
+            flex: 1;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="recording-control">
+            <h1>Recording Control</h1>
+            <form method="post">
+                <input type="hidden" name="action" value="start">
+                <button type="submit">Start Recording</button>
+            </form>
+            <form method="post">
+                <input type="hidden" name="action" value="stop">
+                <button type="submit">Stop Recording</button>
+            </form>
+            <h2>Recordings:</h2>
+            <ul>
+                {% for record in recordings %}
+                    <li>{{ record.status }} - {{ record.filename}}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="parameter-control">
+            <h1>Parameter Settings</h1>
+            <form method="post">
+                {% for key, param in parameters.items() %}
+                    <label for="{{ key }}">{{ key }}:</label>
+                    {% if param.type == 'float' %}
+                        <input type="number" step="0.1" name="{{ key }}" value="{{ param.value }}">
+                    {% elif param.type == 'bool' %}
+                        <input type="checkbox" name="{{ key }}" {% if param.value %}checked{% endif %}>
+                    {% endif %}
+                    <br>
+                {% endfor %}
+                <button type="submit">Update Parameters</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

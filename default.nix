@@ -15,7 +15,6 @@ python311Packages.buildPythonApplication {
   propagatedBuildInputs = [
     python311Packages.cantools
     python311Packages.systemd
-    
     python311Packages.websockets
     python311Packages.pprintpp
     python311Packages.can
@@ -28,6 +27,10 @@ python311Packages.buildPythonApplication {
     py_mcap_pkg
     hytech_np_proto_py
     proto_gen_pkg
+    python311Packages.flask
+    python311Packages.flask-cors
+    python311Packages.hypercorn
+    python311Packages.asgiref # required for flask async 
   ];
 
   src = ./py_data_acq;
