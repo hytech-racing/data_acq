@@ -5,12 +5,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     utils.url = "github:numtide/flake-utils";
+
     mcap-protobuf.url = "github:RCMast3r/mcap-protobuf-support-flake";
     flake-utils.url = "github:numtide/flake-utils";
     mcap.url = "github:RCMast3r/py_mcap_nix";
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
-    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/40";
+    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/92";
+    ht_params.url = "github:hytech-racing/HT_params/just_descriptions";
     nix-proto = { url = "github:notalltim/nix-proto"; };
   };
 
@@ -25,6 +27,7 @@
     , nix-proto
     , ht_can_pkg_flake
     , flake-utils
+    , ht_params
     , ...
     }@inputs:
     flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ] (system:
@@ -57,7 +60,7 @@
             version = "1.0.0";
           };
       };
-      my_overlays = [
+      my_overlays = ht_params.overlays.${system} ++ [
         (self: super: {
             cantools = super.cantools.overridePythonAttrs (old: rec {
               version = "39.4.5";
@@ -71,6 +74,7 @@
         py_dbc_proto_gen_overlay
         py_data_acq_overlay
         proto_gen_overlay
+        
         ht_can_pkg_flake.overlays.default
         mcap-protobuf.overlays.default
         mcap.overlays.default

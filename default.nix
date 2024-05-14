@@ -6,6 +6,7 @@
 , asyncudp_pkg
 , hytech_np_proto_py
 , proto_gen_pkg
+, hytech_eth_np_proto_py
 }:
 
 python311Packages.buildPythonApplication {
@@ -31,6 +32,7 @@ python311Packages.buildPythonApplication {
     python311Packages.flask-cors
     python311Packages.hypercorn
     python311Packages.asgiref # required for flask async 
+    hytech_eth_np_proto_py
   ];
 
   src = ./py_data_acq;

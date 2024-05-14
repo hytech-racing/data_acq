@@ -37,7 +37,7 @@
             <form method="post">
                 {% for key, param in parameters.items() %}
                     <label for="{{ key }}">{{ key }}:</label>
-                    {% if param.type == 'float' %}
+                    {% if param.type == 'number' %}
                         <input type="number" step="0.1" name="{{ key }}" value="{{ param.value }}">
                     {% elif param.type == 'bool' %}
                         <input type="checkbox" name="{{ key }}" {% if param.value %}checked{% endif %}>

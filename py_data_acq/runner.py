@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import asyncio
 
+# socket interface (for parameter server, CASE live output, any other protobuf messages ...)
+from py_data_acq.socket_interface.socket_interface import SocketInterface
+from py_data_acq.common.common_types import SharedQueueManager
 from py_data_acq.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
 from py_data_acq.mcap_writer.writer import HTPBMcapWriter
 from py_data_acq.common.common_types import QueueData
@@ -9,9 +12,10 @@ from py_data_acq.common.common_types import (
     MCAPServerStatusQueueData,
     MCAPFileWriterCommand,
 )
-from py_data_acq.web_server.mcap_server import MCAPServer
+from py_data_acq.web_server.web_app import WebApp
+
 from hytech_np_proto_py import hytech_pb2
-import concurrent.futures
+
 import sys
 import os
 import can
@@ -19,16 +23,20 @@ from can.interfaces.udp_multicast import UdpMulticastBus
 import cantools
 import logging
 
-# TODO we may want to have a config file handling to set params such as:
-#      - foxglove server port
-#      - foxglove server ip
-#      - config to inform io handler (say for different CAN baudrates)
-
-can_methods = {
-    "debug": [UdpMulticastBus.DEFAULT_GROUP_IPv4, "udp_multicast"],
-    "local_can_usb_KV": [0, "kvaser"],
-    "local_debug": ["vcan0", "socketcan"],
-}
+# TODO
+# - [ ] async udp socket receive handling
+#   - [x] add in the HT_params flake as an input to this flake
+#   - [x] add in the generated python library from the HT_params flake
+#   - [x] add the socket interface python code for receiving the protobuf messages
+#   - [x] add ability to the socket interface for handling sending of config to the MCU
+# - [x] add in the parameter list creation using type inflection with the config protobuf message
+#   - [x] test out website creation
+# - [x] add in ability to easily kill the python script lol
+# - [ ] port existing queue-using apps to use the queue manager
+# - [ ] add required tasks (maybe look into task groups?)
+#       - [x] (NEW) udp socket receive task
+#       - [x] (CHANGED) web app task
+#       - [ ] (NEW) udp socket sending task
 
 
 def find_can_interface():
@@ -155,27 +163,43 @@ async def run(logger):
         path_to_mcap = "/home/nixos/recordings"
 
     init_writing_on_start = True
+
+    data_queue_manager = SharedQueueManager()
+
     mcap_writer_status_queue = asyncio.Queue(maxsize=1)
     mcap_writer_cmd_queue = asyncio.Queue(maxsize=1)
+    webapp_input_command_queue = asyncio.Queue(maxsize=1)
+    
+    shared_mcap_write_event = asyncio.Event()
+    shared_foxglove_write_event = asyncio.Event()
+
     mcap_writer = HTPBMcapWriter(path_to_mcap, init_writing_on_start)
-    mcap_web_server = MCAPServer(
+    mcap_web_server = WebApp(
         writer_command_queue=mcap_writer_cmd_queue,
         writer_status_queue=mcap_writer_status_queue,
+        general_command_queue=webapp_input_command_queue,
         init_writing=init_writing_on_start,
         init_filename=mcap_writer.actual_path
     )
-    receiver_task = asyncio.create_task(
+    
+    socket_interface = SocketInterface(shared_foxglove_write_event, shared_mcap_write_event, data_queue_manager)
+
+    can_receiver_task = asyncio.create_task(
         continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
     )
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
     srv_task = asyncio.create_task(mcap_web_server.start_server())
+    socket_recv_task = asyncio.create_task(socket_interface.receive_message_over_udp('127.0.0.1', '20001'))
     logger.info("created tasks")
+    # print("yooo")
     # in the mcap task I actually have to deserialize the any protobuf msg into the message ID and
     # the encoded message for the message id. I will need to handle the same association of message id
     # and schema in the foxglove websocket server.
 
-    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
+    # await asyncio.gather(can_receiver_task, socket_recv_task, fx_task, mcap_task, srv_task)
+    # await asyncio.gather(srv_task)
+    await asyncio.gather(socket_recv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
