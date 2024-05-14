@@ -22,8 +22,11 @@ def start_udp_server(ip, port, send_port):
                     union_msg.ParseFromString(data)
                     
                     if union_msg.HasField('get_config_'):
-                        
-                        send_sock.sendto(current_config.SerializeToString(), ('127.0.0.1', send_port))
+                        print("yo")
+                        send_union_msg = ht_eth_pb2.HT_ETH_Union()
+                        send_union_msg.config_.CopyFrom(current_config)
+
+                        send_sock.sendto(send_union_msg.SerializeToString(), ('127.0.0.1', send_port))
                         print(f"Sent config response to {addr}")
                     else:
                         print("receiving config")
@@ -35,4 +38,4 @@ def start_udp_server(ip, port, send_port):
         send_sock.close()
 
 if __name__ == "__main__":
-    start_udp_server('192.168.1.12', 20002, 20001)  # Use the correct IP and port
+    start_udp_server('127.0.0.1', 20002, 20001)  # Use the correct IP and port

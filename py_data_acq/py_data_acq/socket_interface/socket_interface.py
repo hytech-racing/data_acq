@@ -51,6 +51,7 @@ class SocketInterface:
     async def send_message_over_udp(self, remote_addr: str, send_port: int):
         sock = await asyncudp.create_socket(remote_addr=(remote_addr, send_port))
         while True:
+            await self.cmd_q_event.wait()
+            print("attempting to send to: ", send_port)
             msg_to_send = await self.cmd_q.get()
             sock.sendto(msg_to_send.data)
-                

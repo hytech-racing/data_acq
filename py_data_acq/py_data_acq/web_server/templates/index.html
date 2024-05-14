@@ -31,9 +31,17 @@
                     <li>{{ record.status }} - {{ record.filename}}</li>
                 {% endfor %}
             </ul>
+
+            <h2>Errors:</h2>
+            <ul>
+                {% for err in errors %}
+                    <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
         </div>
         <div class="parameter-control">
             <h1>Parameter Settings</h1>
+
             <form method="post">
                 {% for key, param in parameters.items() %}
                     <label for="{{ key }}">{{ key }}:</label>
@@ -44,7 +52,11 @@
                     {% endif %}
                     <br>
                 {% endfor %}
-                <button type="submit">Update Parameters</button>
+                <button type="submit">Send Parameters</button>
+            </form>
+            <form method="post">
+                <input type="hidden" name="action" value="get_params">
+                <button type="submit">Get Parameters</button>
             </form>
         </div>
     </div>

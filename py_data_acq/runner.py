@@ -32,12 +32,18 @@ import logging
 # - [x] add in the parameter list creation using type inflection with the config protobuf message
 #   - [x] test out website creation
 # - [x] add in ability to easily kill the python script lol
+# - [ ] add in enqueue / dequeue of config message to the param msg queue for the frontend updating
+#   - [x] enqueue happens in the shared queue manager
+#   - [ ] add params update from MCU in web_app: 
+#       - [x] await dequeue of the config message after the user requests to get the latest config
+#       - [x] enqueue config message in the sharedqueuemanager
+# - [ ] test out the socket interface comms task for parameter protocol
 # - [ ] port existing queue-using apps to use the queue manager
 # - [ ] add required tasks (maybe look into task groups?)
 #       - [x] (NEW) udp socket receive task
 #       - [x] (CHANGED) web app task
 #       - [ ] (NEW) udp socket sending task
-
+# - [ ] add nix run ability for local testing
 
 def find_can_interface():
     """Find a CAN interface by checking /sys/class/net/."""
@@ -116,7 +122,14 @@ async def fxglv_websocket_consume_data(queue, foxglove_server):
         while True:
             await fz.send_msgs_from_queue(queue)
 
-
+async def recv_f(socket_interface):
+    async with socket_interface as si:
+        # si.send_message_over_udp()
+        await si.receive_message_over_udp('127.0.0.1', 20001)
+async def send_f(socket_interface):
+    async with socket_interface as si:
+        # si.send_message_over_udp()
+        await si.send_message_over_udp('127.0.0.1', 20002)
 async def run(logger):
     # for example, we will have CAN as our only input as of right now but we may need to add in
     # a sensor that inputs over UART or ethernet
@@ -164,25 +177,33 @@ async def run(logger):
 
     init_writing_on_start = True
 
-    data_queue_manager = SharedQueueManager()
 
     mcap_writer_status_queue = asyncio.Queue(maxsize=1)
     mcap_writer_cmd_queue = asyncio.Queue(maxsize=1)
     webapp_input_command_queue = asyncio.Queue(maxsize=1)
-    
+
+    socket_send_queue = asyncio.Queue()    
     shared_mcap_write_event = asyncio.Event()
     shared_foxglove_write_event = asyncio.Event()
+    shared_param_event = asyncio.Event()
+    data_queue_manager = SharedQueueManager(param_update_event=shared_param_event)
 
     mcap_writer = HTPBMcapWriter(path_to_mcap, init_writing_on_start)
     mcap_web_server = WebApp(
         writer_command_queue=mcap_writer_cmd_queue,
         writer_status_queue=mcap_writer_status_queue,
-        general_command_queue=webapp_input_command_queue,
+        queue_manager=data_queue_manager,
+        feedback_event=shared_param_event,
+        general_command_queue=socket_send_queue,
         init_writing=init_writing_on_start,
         init_filename=mcap_writer.actual_path
     )
     
-    socket_interface = SocketInterface(shared_foxglove_write_event, shared_mcap_write_event, data_queue_manager)
+    socket_interface = SocketInterface(
+        shared_fxglv_queue_event=shared_foxglove_write_event, 
+        shared_mcap_queue_event=shared_mcap_write_event,
+        queue_manager=data_queue_manager, 
+        command_queue=socket_send_queue)
 
     can_receiver_task = asyncio.create_task(
         continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
@@ -190,7 +211,9 @@ async def run(logger):
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
     srv_task = asyncio.create_task(mcap_web_server.start_server())
-    socket_recv_task = asyncio.create_task(socket_interface.receive_message_over_udp('127.0.0.1', '20001'))
+    socket_recv_task = asyncio.create_task(recv_f(socket_interface))
+    socket_send_task = asyncio.create_task(send_f(socket_interface))
+    # socket_send_task = asyncio.create_task(socket_interface.send_message_over_udp('127.0.0.1', 20002))
     logger.info("created tasks")
     # print("yooo")
     # in the mcap task I actually have to deserialize the any protobuf msg into the message ID and
@@ -198,8 +221,8 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
     # await asyncio.gather(can_receiver_task, socket_recv_task, fx_task, mcap_task, srv_task)
-    # await asyncio.gather(srv_task)
-    await asyncio.gather(socket_recv_task)
+    await asyncio.gather(srv_task)
+    # await asyncio.gather(socket_recv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
