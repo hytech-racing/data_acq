@@ -124,11 +124,9 @@ async def fxglv_websocket_consume_data(queue, foxglove_server):
 
 async def recv_f(socket_interface):
     async with socket_interface as si:
-        # si.send_message_over_udp()
         await si.receive_message_over_udp('127.0.0.1', 20001)
 async def send_f(socket_interface):
     async with socket_interface as si:
-        # si.send_message_over_udp()
         await si.send_message_over_udp('127.0.0.1', 20002)
 async def run(logger):
     # for example, we will have CAN as our only input as of right now but we may need to add in
@@ -180,8 +178,7 @@ async def run(logger):
 
     mcap_writer_status_queue = asyncio.Queue(maxsize=1)
     mcap_writer_cmd_queue = asyncio.Queue(maxsize=1)
-    webapp_input_command_queue = asyncio.Queue(maxsize=1)
-
+    queue_params = asyncio.Queue()
     socket_send_queue = asyncio.Queue()    
     shared_mcap_write_event = asyncio.Event()
     shared_foxglove_write_event = asyncio.Event()
@@ -189,7 +186,7 @@ async def run(logger):
     data_queue_manager = SharedQueueManager(param_update_event=shared_param_event)
 
     mcap_writer = HTPBMcapWriter(path_to_mcap, init_writing_on_start)
-    mcap_web_server = WebApp(
+    webapp = WebApp(
         writer_command_queue=mcap_writer_cmd_queue,
         writer_status_queue=mcap_writer_status_queue,
         queue_manager=data_queue_manager,
@@ -203,17 +200,23 @@ async def run(logger):
         shared_fxglv_queue_event=shared_foxglove_write_event, 
         shared_mcap_queue_event=shared_mcap_write_event,
         queue_manager=data_queue_manager, 
-        command_queue=socket_send_queue)
+        command_queue=socket_send_queue,
+        local_addr = '127.0.0.1',
+        local_port = 20001,
+        remote_addr = '127.0.0.1',
+        remote_port = 20002
+        )
 
     can_receiver_task = asyncio.create_task(
         continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
     )
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
-    srv_task = asyncio.create_task(mcap_web_server.start_server())
-    socket_recv_task = asyncio.create_task(recv_f(socket_interface))
-    socket_send_task = asyncio.create_task(send_f(socket_interface))
-    # socket_send_task = asyncio.create_task(socket_interface.send_message_over_udp('127.0.0.1', 20002))
+    srv_task = asyncio.create_task(webapp.start_server(queue_params))
+    # socket_recv_task = asyncio.create_task(recv_f(socket_interface))
+    # socket_send_task = asyncio.create_task(send_f(socket_interface))
+
+    socket_task = asyncio.create_task(socket_interface.run(queue_params))
     logger.info("created tasks")
     # print("yooo")
     # in the mcap task I actually have to deserialize the any protobuf msg into the message ID and

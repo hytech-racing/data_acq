@@ -9,6 +9,7 @@ from hypercorn.asyncio import serve
 from hytech_eth_np_proto_py import ht_eth_pb2
 from datetime import datetime
 
+
 class WebApp:
     def __await__(self):
         async def closure():
@@ -74,16 +75,8 @@ class WebApp:
                 parameters[field_desc.name]['value'] = 0 if use_defaults else value
         return parameters
 
-    async def _get_current_params(self):
-        get_config_msg = ht_eth_pb2.get_config(update_frontend=True)
-        union_msg = ht_eth_pb2.HT_ETH_Union()
-        union_msg.get_config_.CopyFrom(get_config_msg)
-        cmd_msg = QueueData(union_msg.DESCRIPTOR.name, union_msg)
-        await self.general_command_queue.put(cmd_msg)
-        print("waiting")
-        params_msg = await self.queue_manager.get_param_msg()
-        print("got msg???")
-        self.parameters = self._get_new_params(params_msg.pb_msg)
+    
+
     async def _send_new_params(self, params_dict):
         config_msg = ht_eth_pb2.config()
         for field_desc in config_msg.DESCRIPTOR.fields:
@@ -96,17 +89,20 @@ class WebApp:
         union_msg = ht_eth_pb2.HT_ETH_Union()
         union_msg.config_.CopyFrom(config_msg)
         await self.general_command_queue.put(QueueData(union_msg.DESCRIPTOR.name, union_msg))
+        get_config_msg = ht_eth_pb2.get_config(update_frontend=True)
+        union_msg = ht_eth_pb2.HT_ETH_Union()
+        union_msg.get_config_.CopyFrom(get_config_msg)
+        cmd_msg = QueueData(union_msg.DESCRIPTOR.name, union_msg)
+        await self.general_command_queue.put(cmd_msg)
         
     async def handle_interface_command(self, out_queue: asyncio.Queue[QueueData], proto_msg):
         msg = QueueData(proto_msg.DESCRIPTOR.name, proto_msg)
         await out_queue.put(msg)
 
     async def start_stop_mcap_generation(self, input_cmd: bool, cmd_queue, status_queue):
-        # logging.log("Starting/Stopping MCAP generation")
+        
         self.attempting_start_stop = True
         await cmd_queue.put(MCAPFileWriterCommand(input_cmd))
-        # logging.log("MCAP command put in queue")
-            # message = await status_q.get()
 
         message = MCAPServerStatusQueueData(input_cmd, "yeet")
         if message.is_writing:
@@ -125,7 +121,6 @@ class WebApp:
 
         @app.route('/', methods=['GET', 'POST'])
         async def index():
-
             # print("form: ", request.form)
             if request.method == 'POST':
                 if 'action' in request.form and not self.attempting_start_stop:
@@ -137,13 +132,10 @@ class WebApp:
                         file_name = await self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'stopped', 'filename': file_name})
                     elif action =='get_params':
-                        print("uh tryna get em")
-                        await self._get_current_params()
-                        # except asyncio.TimeoutError:
-                        #     print('timed out getting params')
-                        #     now = datetime.now()
-                        #     error_str = str(now.strftime("%H:%M:%S"))
-                        #     self.errors.append(("timed out getting params at "+ error_str))
+                        if self.queue_manager.param_queue_has_data():
+                            param_msg = await self.queue_manager.get_param_msg()
+                            self._get_new_params(param_msg.pb_msg)
+                            print("yoooo updating website boi")
                 else:
                     # Update parameters dynamically
                     for key in self.parameters:
