@@ -1,7 +1,7 @@
 import socket
 import asyncio
 import json
-from py_data_acq.mcap_writer.writer import HTPBMcapWriter
+from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
 import py_data_acq.common.protobuf_helpers as pb_helpers
 from py_data_acq.common.common_types import MCAPServerStatusQueueData, MCAPFileWriterCommand
 from typing import Any

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import asyncio
 
-from py_data_acq.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
-from py_data_acq.mcap_writer.writer import HTPBMcapWriter
+from py_data_acq.data_writers.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
+from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
 from py_data_acq.common.common_types import QueueData
 import py_data_acq.common.protobuf_helpers as pb_helpers
 from py_data_acq.common.common_types import (

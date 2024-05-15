@@ -41,6 +41,7 @@ class HTPBMcapWriter:
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):
+        
         self.mcap_writer_class.finish()
         self.writing_file.close()
 
@@ -69,16 +70,25 @@ class HTPBMcapWriter:
 
     async def write_msg(self, msg):
         if self.is_writing:
+            print(msg)
             self.mcap_writer_class.write_message(
                 topic=msg.DESCRIPTOR.name + "_data",
                 message=msg,
                 log_time=int(time.time_ns()),
                 publish_time=int(time.time_ns()),
             )
-            self.writing_file.flush()
+        self.writing_file.flush()
         return True
 
-    async def write_data(self, queue):
+    async def handle_data(self, queue):
         msg = await queue.get()
         if msg is not None:
+            # TODO handle the 
+            print(msg.pb_msg)
             return await self.write_msg(msg.pb_msg)
+        else:
+            print("error, not actually")
+    async def consume(self, asyncio_msg_queue):
+        async with self as writer:
+            while True:
+                await writer.handle_data(asyncio_msg_queue)

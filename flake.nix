@@ -106,6 +106,7 @@
             path=${pkgs.proto_gen_pkg}
             bin_path=$path"/bin"
             dbc_path=${pkgs.ht_can_pkg}
+            export HT_ETH_BIN_PATH=${pkgs.ht_eth_protos_gen_pkg}"/bin"
             export BIN_PATH=$bin_path
             export DBC_PATH=$dbc_path
 
@@ -143,6 +144,7 @@
       };
 
       packages = rec {
+        ht_eth_bin_pkg = pkgs.ht_eth_bin_pkg;
         default = pkgs.py_data_acq_pkg;
         py_dbc_proto_gen_pkg = pkgs.py_data_acq_pkg;
         proto_gen_pkg = pkgs.proto_gen_pkg;
