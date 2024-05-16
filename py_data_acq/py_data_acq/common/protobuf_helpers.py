@@ -2,6 +2,7 @@ from hytech_np_proto_py import hytech_pb2
 import google.protobuf.message_factory
 from cantools.database import *
 
+from hytech_eth_np_proto_py import ht_eth_pb2
 
 def get_msg_names_and_classes():
     message_names = []
@@ -19,6 +20,17 @@ def get_msg_names_and_classes():
             )
     return message_names, message_classes
 
+def get_oneof_msg_names_and_classes():
+    message_names = []
+    message_classes = {}
+    # Iterate through all fields in the oneof message
+    oneof_message = ht_eth_pb2.HT_ETH_Union()
+    for field in oneof_message.DESCRIPTOR.fields:
+        # Check if the field is a message type
+        if field.message_type is not None:
+            message_names.append(field.message_type.name)
+            message_classes[field.message_type.name] = field.message_type._concrete_class
+    return message_names, message_classes
 
 def pack_protobuf_msg(cantools_dict: dict, msg_name: str, message_classes):
     if msg_name in message_classes:

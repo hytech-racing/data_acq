@@ -53,6 +53,7 @@ def main():
         path_to_eth_bin = os.environ.get("HT_ETH_BIN_PATH")
 
     full_path_to_bin = os.path.join(path_to_bin, "hytech.bin")
+    path_to_eth_bin = os.path.join(path_to_eth_bin, "ht_eth.bin")
     full_path_to_dbc = os.path.join(path_to_dbc, "hytech.dbc")
     db = cantools.db.load_file(full_path_to_dbc)
 

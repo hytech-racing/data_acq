@@ -14,16 +14,26 @@ from hytech_eth_np_proto_py import ht_eth_pb2
 class UDPServerProtocol:
     def __init__(self, output_queue: queue.Queue[QueueData]):
         self.output_queue = output_queue
-
     def connection_made(self, transport):
         self.transport = transport
 
     def datagram_received(self, data, addr):
         union_msg = ht_eth_pb2.HT_ETH_Union()
         message = union_msg.ParseFromString(data)
-        queue_data = QueueData(union_msg.DESCRIPTOR.name, union_msg, DataInputType.ETHERNET_DATA)
-        print(f"Received message from {addr}: {message}")
-        self.output_queue.put(queue_data)
+
+        try:
+            for field_desc, value in union_msg.ListFields():
+                # Check if the field is a composite message
+                if field_desc.message_type is not None:
+                    # Get the composite message from the populated field
+                    composite_msg = getattr(union_msg, field_desc.name)
+                    queue_data = QueueData(composite_msg.DESCRIPTOR.name, composite_msg, DataInputType.ETHERNET_DATA)
+                    print(f"Received message from {addr}: {message}")
+                    self.output_queue.put(queue_data)
+        except Exception as e:
+            # print(id)
+            print(e)
+            pass
 
 
 class UDPInterface:

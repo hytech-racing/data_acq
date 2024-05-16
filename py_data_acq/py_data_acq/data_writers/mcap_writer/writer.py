@@ -2,6 +2,7 @@ import asyncio
 
 import time
 from mcap_protobuf.writer import Writer
+from py_data_acq.common.common_types import QueueData, DataInputType
 from datetime import datetime
 from typing import Any, Optional, Set
 import os
@@ -68,24 +69,31 @@ class HTPBMcapWriter:
 
         return True
 
-    async def write_msg(self, msg):
+    async def write_msg(self, msg, data_type: DataInputType):
         if self.is_writing:
             print(msg)
-            self.mcap_writer_class.write_message(
-                topic=msg.DESCRIPTOR.name + "_data",
-                message=msg,
-                log_time=int(time.time_ns()),
-                publish_time=int(time.time_ns()),
-            )
+            if data_type is DataInputType.CAN_DATA:
+                self.mcap_writer_class.write_message(
+                    topic="CAN/"+msg.DESCRIPTOR.name + "_data",
+                    message=msg,
+                    log_time=int(time.time_ns()),
+                    publish_time=int(time.time_ns()),
+                )
+            if data_type is DataInputType.ETHERNET_DATA:
+                self.mcap_writer_class.write_message(
+                    topic="ETH/"+msg.DESCRIPTOR.name + "_data",
+                    message=msg,
+                    log_time=int(time.time_ns()),
+                    publish_time=int(time.time_ns()),
+                )
         self.writing_file.flush()
         return True
 
     async def handle_data(self, queue):
         msg = await queue.get()
         if msg is not None:
-            # TODO handle the 
             print(msg.pb_msg)
-            return await self.write_msg(msg.pb_msg)
+            return await self.write_msg(msg.pb_msg, msg.data_type)
         else:
             print("error, not actually")
     async def consume(self, asyncio_msg_queue):
