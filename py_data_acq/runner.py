@@ -2,6 +2,7 @@
 from py_data_acq.interfaces.interface_producer import InterfaceProducer
 from py_data_acq.data_writers.data_writers import DataConsumer
 from py_data_acq.common.protobuf_helpers import get_msg_names_and_classes
+from py_data_acq.web_server.web_app_v2 import WebApp
 import sys
 import os
 import can
@@ -64,12 +65,17 @@ def main():
     producer_manager = InterfaceProducer(db, msg_pb_classes, bus)
     consumer_queue = producer_manager.output_queue
     webapp_queue = queue.Queue()
+    mcap_writer_feedback_queue= queue.Queue()
     # Start producer manager
     producer_manager.start()
 
     # Start consumer in another thread
-    consumer = DataConsumer(".", True, full_path_to_bin, path_to_eth_bin, webapp_queue, consumer_queue)
+    consumer = DataConsumer(".", True, full_path_to_bin, path_to_eth_bin, webapp_queue, consumer_queue, mcap_writer_feedback_queue)
+    web_app = WebApp(mcap_writer_feedback_queue, webapp_queue, init_writing=True, init_filename="TODO", host='localhost', port=8888)
+
     consumer_thread = threading.Thread(target=consumer.run)
+    web_app_thread = threading.Thread(target=web_app.start_server)
+    web_app_thread.start()
     consumer_thread.start()
 
     producer_manager.join()

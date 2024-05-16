@@ -2,15 +2,17 @@ import asyncio
 
 import time
 from mcap_protobuf.writer import Writer
-from py_data_acq.common.common_types import QueueData, DataInputType
+from py_data_acq.common.common_types import QueueData, DataInputType, MCAPServerStatusQueueData
 from datetime import datetime
 from typing import Any, Optional, Set
 import os
+import queue
 
 
 class HTPBMcapWriter:
-    def __init__(self, mcap_base_path, init_writing: bool):
+    def __init__(self, mcap_base_path, init_writing: bool, status_output_queue: queue.Queue[MCAPServerStatusQueueData]):
         self.base_path = mcap_base_path
+        self.status_output_queue = status_output_queue
         if init_writing:
             now = datetime.now()
             date_time_filename = now.strftime("%m_%d_%Y_%H_%M_%S" + ".mcap")
@@ -86,7 +88,19 @@ class HTPBMcapWriter:
                     log_time=int(time.time_ns()),
                     publish_time=int(time.time_ns()),
                 )
-        self.writing_file.flush()
+            self.writing_file.flush()
+        else:
+            print("not writing msg")
+        if data_type is DataInputType.WEB_APP_DATA:
+            writing_command_input = msg.writing
+            print("got cmd from web app ",msg)
+            if writing_command_input:
+                await self.open_new_writer()
+                self.status_output_queue.put(MCAPServerStatusQueueData(True, self.actual_path))
+            else:
+                await self.close_writer()
+                self.status_output_queue.put(MCAPServerStatusQueueData(False, self.actual_path))
+            
         return True
 
     async def handle_data(self, queue):

@@ -6,7 +6,7 @@ from enum import Enum
 class DataInputType(Enum):
     CAN_DATA = 1
     ETHERNET_DATA = 2
-
+    WEB_APP_DATA = 3
 
 class QueueData:
     def __init__(self, schema_name: str, msg: Message, data_type: DataInputType):
@@ -15,17 +15,10 @@ class QueueData:
         self.pb_msg = msg
         self.data_type = data_type
 
-
 class MCAPServerStatusQueueData:
     def __init__(self, writing_status: bool, writing_file: str):
         self.is_writing = writing_status
         self.writing_file = writing_file
-
-
-class MCAPFileWriterCommand:
-    def __init__(self, write: bool):
-        self.writing = write
-
 
 class SharedQueueManager:
     def __init__(self, param_update_event: asyncio.Event):
