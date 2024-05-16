@@ -57,23 +57,19 @@ class HTPBMcapWriter:
         return True
 
     async def open_new_writer(self):
-        if self.is_writing:
-            self.is_writing = False
-            self.mcap_writer_class.finish()
-            self.writing_file.close()
-
-        now = datetime.now()
-        date_time_filename = now.strftime("%m_%d_%Y_%H_%M_%S" + ".mcap")
-        self.actual_path = os.path.join(self.base_path, date_time_filename)
-        self.writing_file = open(self.actual_path, "wb")
-        self.mcap_writer_class = Writer(self.writing_file)
-        self.is_writing = True
+        if not self.is_writing:
+            now = datetime.now()
+            date_time_filename = now.strftime("%m_%d_%Y_%H_%M_%S" + ".mcap")
+            self.actual_path = os.path.join(self.base_path, date_time_filename)
+            self.writing_file = open(self.actual_path, "wb")
+            self.mcap_writer_class = Writer(self.writing_file)
+            self.is_writing = True
 
         return True
 
     async def write_msg(self, msg, data_type: DataInputType):
         if self.is_writing:
-            print(msg)
+            # print(msg)
             if data_type is DataInputType.CAN_DATA:
                 self.mcap_writer_class.write_message(
                     topic="CAN/"+msg.DESCRIPTOR.name + "_data",
@@ -92,6 +88,7 @@ class HTPBMcapWriter:
         else:
             print("not writing msg")
         if data_type is DataInputType.WEB_APP_DATA:
+            print(msg)
             writing_command_input = msg.writing
             print("got cmd from web app ",msg)
             if writing_command_input:
@@ -106,7 +103,7 @@ class HTPBMcapWriter:
     async def handle_data(self, queue):
         msg = await queue.get()
         if msg is not None:
-            print(msg.pb_msg)
+            # print(msg.pb_msg)
             return await self.write_msg(msg.pb_msg, msg.data_type)
         else:
             print("error, not actually")

@@ -1,3 +1,4 @@
 {
-  "python.pythonPath": "/nix/store/qp5zys77biz7imbk6yy85q5pdv7qk84j-python3-3.11.6/bin/python"
+  "python.pythonPath": "/nix/store/qp5zys77biz7imbk6yy85q5pdv7qk84j-python3-3.11.6/bin/python",
+  "python.analysis.typeCheckingMode": "off"
 }

@@ -24,7 +24,6 @@ class WebApp:
         self.cmd_queue = writer_command_queue # mcap writer output queue
         self.status_queue = writer_status_queue # queue that contains the mcap writer status (is writing / filenames, etc.)
         self.attempting_start_stop = False
-        # self.getting_params = False
         if(init_writing):
             self.is_writing = True
             self.mcap_status_message = f"An MCAP file is being written: {init_filename}"
@@ -73,11 +72,12 @@ class WebApp:
     def start_stop_mcap_generation(self, input_cmd: bool, cmd_queue, status_queue):
         self.attempting_start_stop = True
         web_app_command = ht_eth_pb2.web_app_command()
+        web_app_command.writing = input_cmd
         # input the command into the command queue
         cmd_queue.put(QueueData(web_app_command.DESCRIPTOR.name, web_app_command, data_type=DataInputType.WEB_APP_DATA))
         # get the response from the status queue
         message = status_queue.get()
-        print("got feedback!", message)
+        print("got feedback!", message.writing_file)
         if message.is_writing:
             self.is_writing = True
         else:
@@ -96,11 +96,11 @@ class WebApp:
             if request.method == 'POST':
                 if 'action' in request.form and not self.attempting_start_stop:
                     action = request.form['action']
-                    if action == 'start':
+                    if action == 'start' and not self.is_writing:
                         file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'started', 'filename': file_name})
-                    elif action == 'stop':
-                        file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
+                    elif action == 'stop'and self.is_writing:
+                        file_name = self.start_stop_mcap_generation(input_cmd=False, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'stopped', 'filename': file_name})
                     elif action =='get_params':
                         if self.queue_manager.param_queue_has_data():

@@ -28,7 +28,7 @@ class UDPServerProtocol:
                     # Get the composite message from the populated field
                     composite_msg = getattr(union_msg, field_desc.name)
                     queue_data = QueueData(composite_msg.DESCRIPTOR.name, composite_msg, DataInputType.ETHERNET_DATA)
-                    print(f"Received message from {addr}: {message}")
+                    # print(f"Received message from {addr}: {message}")
                     self.output_queue.put(queue_data)
         except Exception as e:
             # print(id)

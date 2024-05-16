@@ -46,9 +46,9 @@ class DataConsumer(threading.Thread):
     async def copy_pb_msg_queue_to_asyncio_queue(self):
         loop = asyncio.get_running_loop()
         while True:
-            print("copying pb message data to the queues")
+            # print("copying pb message data to the queues")
             item = await loop.run_in_executor(None, self.pb_message_queue.get)
-            print("copied pb data")
+            # print("copied pb data")
             await self.mcap_msg_queue_copy.put(item)
             await self.foxglove_msg_queue_copy.put(item)
             self.pb_message_queue.task_done()
@@ -56,9 +56,9 @@ class DataConsumer(threading.Thread):
     async def copy_web_app_queue_asyncio_queue(self):
         loop = asyncio.get_running_loop()
         while True:
-            print("copying web app data to the queues")
+            # print("copying web app data to the queues")
             item = await loop.run_in_executor(None, self.web_app_queue.get)
-            print("copied web app data")
+            # print("copied web app data")
             await self.mcap_msg_queue_copy.put(item)
             await self.foxglove_msg_queue_copy.put(item)
             self.web_app_queue.task_done()

@@ -11,7 +11,9 @@ import cantools
 import threading
 import queue
 
-
+# TODO
+# - [ ] re-integrate the parameter message creation and sending from the web app into the web app command queue
+# - [ ] fix the mcap recording command integration with the mcap writer and ensure that it starts / stops properly
 
 def find_can_interface():
     """Find a CAN interface by checking /sys/class/net/."""
