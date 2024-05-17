@@ -41,14 +41,16 @@ class UDPServerProtocol:
 
 
 class UDPInterface:
-    def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData]):
+    def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData], recv_ip: str, recv_port: int):
         self.output_queue = output_queue
         self.config_output_queue = config_output_queue
+        self.recv_ip = recv_ip
+        self.recv_port = recv_port
     async def produce(self):
         # Creating a UDP server to receive data
         transport, protocol = await asyncio.get_event_loop().create_datagram_endpoint(
             lambda: UDPServerProtocol(self.output_queue, self.config_output_queue),
-            local_addr=('127.0.0.1', 20001)
+            local_addr=(self.recv_ip, self.recv_port)
         )
         try:
             # Run until producer task is cancelled
@@ -97,12 +99,12 @@ class CANInterface:
         notifier.stop()
 
 class InterfaceProducer(threading.Thread):
-    def __init__(self, can_msg_db: cantools.db.Database, message_classes, can_bus):
+    def __init__(self, can_msg_db: cantools.db.Database, message_classes, can_bus, recv_ip, recv_port):
         super().__init__()
         self.output_queue = queue.Queue()
         self.config_output_queue = queue.Queue()
         self.can_interface_producer = CANInterface(can_msg_db, message_classes, self.output_queue, can_bus)
-        self.udp_interface_producer = UDPInterface(self.output_queue, self.config_output_queue)
+        self.udp_interface_producer = UDPInterface(self.output_queue, self.config_output_queue, recv_ip, recv_port)
 
     def run(self):
         loop = asyncio.new_event_loop()

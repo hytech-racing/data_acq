@@ -24,6 +24,37 @@ def find_can_interface():
 def main():
     # for example, we will have CAN as our only input as of right now but we may need to add in
     # a sensor that inputs over UART or ethernet
+    path_to_bin = ""
+    path_to_dbc = ""
+    mcu_ip = "192.168.1.30"
+    recv_ip = "192.168.1.69"
+    send_to_mcu_port = 20000
+    recv_from_mcu_port = 20001
+    print(len(sys.argv))
+    if len(sys.argv) == 8:
+        path_to_bin = sys.argv[1]
+        path_to_dbc = sys.argv[2]
+        path_to_eth_bin = sys.argv[3]
+        mcu_ip = sys.argv[4]
+        send_to_mcu_port = sys.argv[5]
+        recv_from_mcu_port = sys.argv[6]
+        recv_ip = sys.argv[7]
+
+    elif len(sys.argv) == 1:
+        print("no args set, defaulting to environment variable sets for dev usage")
+        path_to_bin = os.environ.get("BIN_PATH")
+        path_to_dbc = os.environ.get("DBC_PATH")
+        path_to_eth_bin = os.environ.get("HT_ETH_BIN_PATH")
+        recv_ip = "127.0.0.1"
+        mcu_ip = "127.0.0.1"
+        send_to_mcu_port = 20002
+        recv_from_mcu_port = 20001
+    else:
+        print("error, need to use proper args")
+        print("runner.py [path_to_bin] [path_to_dbc] [path_to_eth_bin] [mcu_ip] [send_to_mcu_port [recv_from_mcu_port] [recv_ip]")
+        return
+
+
     can_interface = find_can_interface()
 
     if can_interface:
@@ -41,17 +72,7 @@ def main():
             channel=UdpMulticastBus.DEFAULT_GROUP_IPv6, interface="udp_multicast"
         )
 
-    path_to_bin = ""
-    path_to_dbc = ""
 
-    if len(sys.argv) > 2:
-        path_to_bin = sys.argv[1]
-        path_to_dbc = sys.argv[2]
-        path_to_eth_bin = sys.argv[3]
-    else:
-        path_to_bin = os.environ.get("BIN_PATH")
-        path_to_dbc = os.environ.get("DBC_PATH")
-        path_to_eth_bin = os.environ.get("HT_ETH_BIN_PATH")
 
     full_path_to_bin = os.path.join(path_to_bin, "hytech.bin")
     path_to_eth_bin = os.path.join(path_to_eth_bin, "ht_eth.bin")
@@ -60,7 +81,7 @@ def main():
 
     list_of_msg_names, msg_pb_classes = get_msg_names_and_classes()
 
-    producer_manager = InterfaceProducer(db, msg_pb_classes, bus)
+    producer_manager = InterfaceProducer(db, msg_pb_classes, bus, recv_ip, recv_from_mcu_port)
     consumer_queue = producer_manager.output_queue
     webapp_consumer_queue = producer_manager.config_output_queue
     webapp_mcap_writer_command_queue = queue.Queue()  # command queue to the mcap writer
@@ -94,7 +115,7 @@ def main():
         port=8888,
     )
 
-    output_consumer = InterfaceConsumer(webapp_output_queue, "127.0.0.1", 20002)
+    output_consumer = InterfaceConsumer(webapp_output_queue, mcu_ip, send_to_mcu_port)
     msg_out_thread = threading.Thread(target=output_consumer.run)
     consumer_thread = threading.Thread(target=consumer.run)
     web_app_thread = threading.Thread(target=web_app.start_server)
@@ -103,7 +124,6 @@ def main():
     msg_out_thread.start()
 
     producer_manager.join()
-    # consumer_queue.put(None)  # Signal consumer to stop
     consumer_thread.join()
 
 

@@ -10,6 +10,8 @@ def start_udp_server(ip, recv_port, send_port):
     send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     print(f"UDP server listening on {ip}:{recv_port}")
     current_config = ht_eth_pb2.config()
+    CASE_msg= ht_eth_pb2.CASE_msg()
+    CASE_msg.vehm_fl_slip = 6969.3
     try:
         while True:
             ready = select.select([server_socket], [], [])
@@ -26,7 +28,10 @@ def start_udp_server(ip, recv_port, send_port):
                         send_union_msg = ht_eth_pb2.HT_ETH_Union()
                         send_union_msg.config_.CopyFrom(current_config)
 
+                        send_union_msg_p2 = ht_eth_pb2.HT_ETH_Union()
+                        send_union_msg_p2.case_msg_.CopyFrom(CASE_msg)
                         send_sock.sendto(send_union_msg.SerializeToString(), ('127.0.0.1', send_port))
+                        send_sock.sendto(send_union_msg_p2.SerializeToString(), ('127.0.0.1', send_port))
                         print(f"Sent config response to {addr}")
                     else:
                         print("receiving config")
