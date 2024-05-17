@@ -57,7 +57,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         try:
             data = await queue.get()
             if data is not None:
-                print(data)
+                # print(data)
                 if data.data_type is DataInputType.CAN_DATA:
                     await super().send_message(self.can_chan_id_dict[data.name], time.time_ns(), data.data)
                 if data.data_type is DataInputType.ETHERNET_DATA:
