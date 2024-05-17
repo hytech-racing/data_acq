@@ -12,8 +12,9 @@ from py_data_acq.common.common_types import QueueData, DataInputType
 from hytech_eth_np_proto_py import ht_eth_pb2
 
 class UDPServerProtocol:
-    def __init__(self, output_queue: queue.Queue[QueueData]):
+    def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData]):
         self.output_queue = output_queue
+        self.config_output_queue = config_output_queue
     def connection_made(self, transport):
         self.transport = transport
 
@@ -29,6 +30,9 @@ class UDPServerProtocol:
                     composite_msg = getattr(union_msg, field_desc.name)
                     queue_data = QueueData(composite_msg.DESCRIPTOR.name, composite_msg, DataInputType.ETHERNET_DATA)
                     print(f"Received message from {addr}: {message}")
+                    if composite_msg.DESCRIPTOR.name == 'config':
+                        print('got response config msg')
+                        self.config_output_queue.put(queue_data)
                     self.output_queue.put(queue_data)
         except Exception as e:
             # print(id)
@@ -37,13 +41,13 @@ class UDPServerProtocol:
 
 
 class UDPInterface:
-    def __init__(self, output_queue: queue.Queue[QueueData]):
+    def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData]):
         self.output_queue = output_queue
-
+        self.config_output_queue = config_output_queue
     async def produce(self):
         # Creating a UDP server to receive data
         transport, protocol = await asyncio.get_event_loop().create_datagram_endpoint(
-            lambda: UDPServerProtocol(self.output_queue),
+            lambda: UDPServerProtocol(self.output_queue, self.config_output_queue),
             local_addr=('127.0.0.1', 20001)
         )
         try:
@@ -96,8 +100,9 @@ class InterfaceProducer(threading.Thread):
     def __init__(self, can_msg_db: cantools.db.Database, message_classes, can_bus):
         super().__init__()
         self.output_queue = queue.Queue()
+        self.config_output_queue = queue.Queue()
         self.can_interface_producer = CANInterface(can_msg_db, message_classes, self.output_queue, can_bus)
-        self.udp_interface_producer = UDPInterface(self.output_queue)
+        self.udp_interface_producer = UDPInterface(self.output_queue, self.config_output_queue)
 
     def run(self):
         loop = asyncio.new_event_loop()

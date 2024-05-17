@@ -25,6 +25,8 @@
                 <input type="hidden" name="action" value="stop">
                 <button type="submit">Stop Recording</button>
             </form>
+            <h2>Current Recording File:</h2>
+                <p>{{ writing_file }}</p>
             <h2>Recordings:</h2>
             <ul>
                 {% for record in recordings %}
@@ -55,12 +57,8 @@
                 <button type="submit">Send Parameters</button>
             </form>
             <form method="post">
-                <input type="hidden" name="action" value="get__params">
-                <button type="submit">Request Current Params</button>
-            </form>
-            <form method="post">
                 <input type="hidden" name="action" value="get_params">
-                <button type="submit">Refresh Params List</button>
+                <button type="submit">Get Current Params</button>
             </form>
         </div>
     </div>

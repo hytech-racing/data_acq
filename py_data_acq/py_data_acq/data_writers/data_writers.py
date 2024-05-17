@@ -42,6 +42,8 @@ class DataConsumer(threading.Thread):
         # Create two asyncio queues
         self.mcap_msg_queue_copy = asyncio.Queue()
         self.foxglove_msg_queue_copy = asyncio.Queue()
+    def get_current_mcap_writer_filename(self):
+        return self.mcap_writer.actual_path
 
     async def copy_pb_msg_queue_to_asyncio_queue(self):
         loop = asyncio.get_running_loop()

@@ -4,11 +4,11 @@ import socket
 from hytech_eth_np_proto_py import ht_eth_pb2
 import select
 import time
-def start_udp_server(ip, port, send_port):
+def start_udp_server(ip, recv_port, send_port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server_socket.bind((ip, port))
+    server_socket.bind((ip, recv_port))
     send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    print(f"UDP server listening on {ip}:{port}")
+    print(f"UDP server listening on {ip}:{recv_port}")
     current_config = ht_eth_pb2.config()
     try:
         while True:

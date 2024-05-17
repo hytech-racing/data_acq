@@ -12,7 +12,9 @@ from datetime import datetime
 class WebApp:
     def __init__(self, 
                  writer_status_queue: queue.Queue[MCAPServerStatusQueueData],
+                 config_status_queue: queue.Queue[QueueData], # queue directly from the data_writers that contains only received config_ msgs from the socket
                  writer_command_queue: queue.Queue[QueueData], # the writer command queue will contain protobuf data just like all the rest but the writer will look to see if the messages
+                 output_msg_queue: queue.Queue[QueueData], # queue that contains the output messages that will be sent over the UDP interface (config changes at first)
                  init_writing= True, 
                  init_filename = '.',
                  host='localhost', 
@@ -20,17 +22,16 @@ class WebApp:
         self.recordings = []
         self.host = host
         self.port = port
+        if init_writing:
+            self.writing_file = init_filename
+        else:
+            self.writing_file = "N/A"
         self.is_writing = init_writing
+        self.config_status_queue = config_status_queue
+        self.webapp_output_msg_queue = output_msg_queue # queue containing config updates for now (these msgs get sent directly over the UDP interface)
         self.cmd_queue = writer_command_queue # mcap writer output queue
         self.status_queue = writer_status_queue # queue that contains the mcap writer status (is writing / filenames, etc.)
         self.attempting_start_stop = False
-        # self.getting_params = False
-        if(init_writing):
-            self.is_writing = True
-            self.mcap_status_message = f"An MCAP file is being written: {init_filename}"
-        else:
-            self.is_writing = False
-            self.mcap_status_message = "No MCAP file is being written."
         self.errors = []
         self.parameters = self._get_new_params()
    
@@ -64,24 +65,35 @@ class WebApp:
                 setattr(config_msg, field_desc.name,params_dict[field_desc.name]['value'])
         union_msg = ht_eth_pb2.HT_ETH_Union()
         union_msg.config_.CopyFrom(config_msg)
-        self.general_command_queue.put(QueueData(union_msg.DESCRIPTOR.name, union_msg))
-        
-    def handle_interface_command(self, out_queue: queue.Queue[QueueData], proto_msg):
-        msg = QueueData(proto_msg.DESCRIPTOR.name, proto_msg)
-        out_queue.put(msg)
+        self.webapp_output_msg_queue.put(QueueData(union_msg.DESCRIPTOR.name, union_msg, data_type=DataInputType.ETHERNET_DATA))
+    def _request_current_params(self):
+        output = ht_eth_pb2.get_config()
+        output.update_frontend = True
+        union_msg = ht_eth_pb2.HT_ETH_Union()
+        union_msg.get_config_.CopyFrom(output)
+        # clear the receiving queue to make sure the config we receive is the latest one
+        while not self.config_status_queue.empty():
+            trash_config = self.config_status_queue.get()
+        self.webapp_output_msg_queue.put(QueueData(union_msg.DESCRIPTOR.name, union_msg, data_type=DataInputType.ETHERNET_DATA))
+    def _await_and_update_params(self):
+        response = self.config_status_queue.get()
+        self.parameters = self._get_new_params(response.pb_msg)
 
     def start_stop_mcap_generation(self, input_cmd: bool, cmd_queue, status_queue):
         self.attempting_start_stop = True
         web_app_command = ht_eth_pb2.web_app_command()
+        web_app_command.writing = input_cmd
         # input the command into the command queue
         cmd_queue.put(QueueData(web_app_command.DESCRIPTOR.name, web_app_command, data_type=DataInputType.WEB_APP_DATA))
         # get the response from the status queue
         message = status_queue.get()
-        print("got feedback!", message)
+        print("got feedback!", message.is_writing, message.writing_file)
         if message.is_writing:
             self.is_writing = True
+            self.writing_file = message.writing_file
         else:
             self.is_writing = False
+            self.writing_file = "N/A"
         self.attempting_start_stop = False 
         return message.writing_file
     
@@ -94,19 +106,22 @@ class WebApp:
         def index():
             # print("form: ", request.form)
             if request.method == 'POST':
-                if 'action' in request.form and not self.attempting_start_stop:
+                if 'action' in request.form:
                     action = request.form['action']
-                    if action == 'start':
+                    if action == 'start' and not self.attempting_start_stop and not self.is_writing:
                         file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'started', 'filename': file_name})
-                    elif action == 'stop':
-                        file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
+                    elif action == 'start' and self.is_writing:
+                        self.errors.append("WARNING: cannot start writing when already writing file")
+                    elif action == 'stop' and not self.is_writing:
+                        self.errors.append("WARNING: cannot stop writing when no file is being written")
+                    elif action == 'stop' and not self.attempting_start_stop and self.is_writing:
+                        file_name = self.start_stop_mcap_generation(input_cmd=False, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'stopped', 'filename': file_name})
                     elif action =='get_params':
-                        if self.queue_manager.param_queue_has_data():
-                            param_msg = self.queue_manager.get_param_msg()
-                            self._get_new_params(param_msg.pb_msg)
-                            print("yoooo updating website boi")
+                        print("getting params")
+                        self._request_current_params()
+                        self._await_and_update_params()
                 else:
                     # Update parameters dynamically
                     for key in self.parameters:
@@ -115,7 +130,7 @@ class WebApp:
                         elif self.parameters[key]['type'] == 'bool':
                             self.parameters[key]['value'] = request.form.get(key) == 'on'
                     self._send_new_params(self.parameters)
-            return render_template('index.html', recordings=self.recordings, parameters=self.parameters, errors=self.errors)
+            return render_template('index.html', recordings=self.recordings, parameters=self.parameters, errors=self.errors, writing_file=self.writing_file)
         return app
     
     def start_server(self):
