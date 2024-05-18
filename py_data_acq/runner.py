@@ -47,7 +47,7 @@ def main():
         path_to_eth_bin = os.environ.get("HT_ETH_BIN_PATH")
         recv_ip = "127.0.0.1"
         mcu_ip = "127.0.0.1"
-        send_to_mcu_port = 20002
+        send_to_mcu_port = 20000
         recv_from_mcu_port = 20001
     else:
         print("error, need to use proper args")

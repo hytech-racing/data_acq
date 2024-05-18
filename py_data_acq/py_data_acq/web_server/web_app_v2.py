@@ -74,6 +74,7 @@ class WebApp:
         # clear the receiving queue to make sure the config we receive is the latest one
         while not self.config_status_queue.empty():
             trash_config = self.config_status_queue.get()
+        print("attempting to output from web app")
         self.webapp_output_msg_queue.put(QueueData(union_msg.DESCRIPTOR.name, union_msg, data_type=DataInputType.ETHERNET_DATA))
     def _await_and_update_params(self):
         response = self.config_status_queue.get()

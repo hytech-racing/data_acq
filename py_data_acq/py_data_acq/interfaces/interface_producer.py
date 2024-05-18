@@ -50,7 +50,8 @@ class UDPInterface:
         # Creating a UDP server to receive data
         transport, protocol = await asyncio.get_event_loop().create_datagram_endpoint(
             lambda: UDPServerProtocol(self.output_queue, self.config_output_queue),
-            local_addr=(self.recv_ip, self.recv_port)
+            local_addr=('0.0.0.0', 20001)
+            
         )
         try:
             # Run until producer task is cancelled
