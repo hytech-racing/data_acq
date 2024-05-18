@@ -1,0 +1,141 @@
+[
+    {
+        "automatic": false,
+        "displayName": "Driver",
+        "name": "driver",
+        "options": [
+            "Shayan",
+            "Ryan"
+        ],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Testing Goal",
+        "name": "testingGoal",
+        "options": [],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Event Type",
+        "name": "eventType",
+        "options": [
+            "Skidpad",
+            "Acceleration",
+            "Hairpin",
+            "SCC Autocross"
+        ],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Location",
+        "name": "location",
+        "options": [
+            "MRDC",
+            "SCC",
+            "Rome",
+            "Michigan"
+        ],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Conditions (ie dry, night time)",
+        "name": "conditions",
+        "options": [],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Temperature (C)",
+        "name": "temperature",
+        "options": [],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Aero Type",
+        "name": "aeroType",
+        "options": [],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "MCU Version",
+        "name": "MCUversion",
+        "options": [],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Yaw PID Values",
+        "name": "yawPIDValues",
+        "options": [],
+        "type": "pid"
+    },
+    {
+        "automatic": false,
+        "displayName": "TCS PID Values",
+        "name": "TCSPIDValues",
+        "options": [],
+        "type": "pid"
+    },
+    {
+        "automatic": false,
+        "displayName": "TCS Enabled",
+        "name": "TCSEnable",
+        "options": [],
+        "type": "boolean"
+    },
+    {
+        "automatic": false,
+        "displayName": "Yaw PID Enabled",
+        "name": "yawPIDEnable",
+        "options": [],
+        "type": "boolean"
+    },
+    {
+        "automatic": false,
+        "displayName": "Launch Enabled",
+        "name": "launchEnable",
+        "options": [],
+        "type": "boolean"
+    },
+    {
+        "automatic": false,
+        "displayName": "Norm Force Enabled",
+        "name": "normForceEnable",
+        "options": [],
+        "type": "boolean"
+    },
+    {
+        "automatic": false,
+        "displayName": "Mech Power Lim. Enabled",
+        "name": "mechPowerLimEnable",
+        "options": [],
+        "type": "boolean"
+    },
+    {
+        "automatic": false,
+        "displayName": "PID Power Lim. Enabled",
+        "name": "pidPowerLimEnable",
+        "options": [],
+        "type": "boolean"
+    },
+    {
+        "automatic": false,
+        "displayName": "Notes",
+        "name": "notes",
+        "options": [],
+        "type": "string"
+    },
+    {
+        "automatic": false,
+        "displayName": "Errors",
+        "name": "errors",
+        "options": [],
+        "type": "string"
+    }
+]
