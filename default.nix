@@ -4,9 +4,9 @@
 , py_mcap_pkg
 , py_foxglove_websocket_pkg
 , asyncudp_pkg
-, hytech_np_proto_py
 , proto_gen_pkg
 , hytech_eth_np_proto_py
+, hytech_np_proto_py
 }:
 
 python311Packages.buildPythonApplication {
