@@ -93,10 +93,13 @@ def main():
     )  # webapp message queue for outputting commands directly over the UDP consumer interface (config updates at first)
     # Start producer manager
     producer_manager.start()
-
+    path_to_mcap = "."
+    if os.path.exists("/etc/nixos"):
+        # logger.info("detected running on nixos")
+        path_to_mcap = "/home/nixos/recordings"
     # Start consumer in another thread
     consumer = DataConsumer(
-        ".",
+        path_to_mcap,
         True,
         full_path_to_bin,
         path_to_eth_bin,
