@@ -30,8 +30,8 @@ def start_udp_server(ip, recv_port, send_port):
 
                         send_union_msg_p2 = ht_eth_pb2.HT_ETH_Union()
                         send_union_msg_p2.case_msg_.CopyFrom(CASE_msg)
-                        send_sock.sendto(send_union_msg.SerializeToString(), ('192.168.1.69', send_port))
-                        send_sock.sendto(send_union_msg_p2.SerializeToString(), ('192.168.1.69', send_port))
+                        send_sock.sendto(send_union_msg.SerializeToString(), ('127.0.0.1', send_port))
+                        send_sock.sendto(send_union_msg_p2.SerializeToString(), ('127.0.0.1', send_port))
                         print(f"Sent config response to {addr}")
                     else:
                         print("receiving config")
@@ -43,4 +43,4 @@ def start_udp_server(ip, recv_port, send_port):
         send_sock.close()
 
 if __name__ == "__main__":
-    start_udp_server('192.168.1.30', 20000, 20001)  # Use the correct IP and port
+    start_udp_server('127.0.0.1', 20000, 20001)  # Use the correct IP and port

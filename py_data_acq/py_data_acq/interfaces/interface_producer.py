@@ -10,55 +10,41 @@ import can
 from py_data_acq.common.protobuf_helpers import pack_protobuf_msg
 from py_data_acq.common.common_types import QueueData, DataInputType
 from hytech_eth_np_proto_py import ht_eth_pb2
-
-class UDPServerProtocol:
-    def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData]):
-        self.output_queue = output_queue
-        self.config_output_queue = config_output_queue
-    def connection_made(self, transport):
-        self.transport = transport
-
-    def datagram_received(self, data, addr):
-        union_msg = ht_eth_pb2.HT_ETH_Union()
-        message = union_msg.ParseFromString(data)
-
-        try:
-            for field_desc, value in union_msg.ListFields():
-                # Check if the field is a composite message
-                if field_desc.message_type is not None:
-                    # Get the composite message from the populated field
-                    composite_msg = getattr(union_msg, field_desc.name)
-                    queue_data = QueueData(composite_msg.DESCRIPTOR.name, composite_msg, DataInputType.ETHERNET_DATA)
-                    print(f"Received message from {addr}: {message}")
-                    if composite_msg.DESCRIPTOR.name == 'config':
-                        print('got response config msg')
-                        self.config_output_queue.put(queue_data)
-                    self.output_queue.put(queue_data)
-        except Exception as e:
-            # print(id)
-            print(e)
-            pass
-
-
+import asyncudp
 class UDPInterface:
     def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData], recv_ip: str, recv_port: int):
         self.output_queue = output_queue
         self.config_output_queue = config_output_queue
-        self.recv_ip = recv_ip
-        self.recv_port = recv_port
-    async def produce(self):
-        # Creating a UDP server to receive data
-        transport, protocol = await asyncio.get_event_loop().create_datagram_endpoint(
-            lambda: UDPServerProtocol(self.output_queue, self.config_output_queue),
-            local_addr=('0.0.0.0', 20001)
-            
-        )
-        try:
-            # Run until producer task is cancelled
-            await asyncio.Event().wait()
-        finally:
-            transport.close()
+        self.recv_ip = '0.0.0.0'
+        self.recv_port = 20001
 
+    async def produce(self):
+        sock = await asyncudp.create_socket(local_addr=(self.recv_ip, self.recv_port))
+        try:
+            while True:
+                print("awaiting recv")
+                data, addr = await sock.recvfrom()
+                self.process_data(data, addr)
+        except asyncio.CancelledError:
+            pass
+        finally:
+            sock.close()
+
+    def process_data(self, data, addr):
+        union_msg = ht_eth_pb2.HT_ETH_Union()
+        try:
+            union_msg.ParseFromString(data)
+            for field_desc, value in union_msg.ListFields():
+                if field_desc.message_type is not None:
+                    composite_msg = getattr(union_msg, field_desc.name)
+                    queue_data = QueueData(composite_msg.DESCRIPTOR.name, composite_msg, DataInputType.ETHERNET_DATA)
+                    print(f"Received message from {addr}: {composite_msg}")
+                    if composite_msg.DESCRIPTOR.name == 'config':
+                        print('Got response config msg')
+                        self.config_output_queue.put(queue_data)
+                    self.output_queue.put(queue_data)
+        except Exception as e:
+            print(e)
 
 class CANInterface:
     def __init__(self, can_msg_decoder: cantools.db.Database, message_classes, queue: queue.Queue[QueueData], can_bus):
