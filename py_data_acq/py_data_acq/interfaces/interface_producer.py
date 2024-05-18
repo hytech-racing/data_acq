@@ -80,7 +80,7 @@ class CANInterface:
                 decoded_msg = self.can_msg_decoder.decode_message(
                     msg.arbitration_id, msg.data, decode_containers=True
                 )
-                print("decoded CAN msg")
+                # print("decoded CAN msg")
                 msg = self.can_msg_decoder.get_message_by_frame_id(msg.arbitration_id)
                 # print("got msg by id")
                 msg = pack_protobuf_msg(
