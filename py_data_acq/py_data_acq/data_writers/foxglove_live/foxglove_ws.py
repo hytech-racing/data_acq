@@ -35,7 +35,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
             {
                 "topic": "CAN/"+name +"_data",
                 "encoding": "protobuf",
-                "schemaName": name,
+                "schemaName": "hytech."+name,
                 "schema": self.can_bin_schema,
             }
         )
