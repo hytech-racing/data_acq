@@ -15,8 +15,8 @@ class UDPInterface:
     def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData], recv_ip: str, recv_port: int):
         self.output_queue = output_queue
         self.config_output_queue = config_output_queue
-        self.recv_ip = '0.0.0.0'
-        self.recv_port = 20001
+        self.recv_ip = recv_ip
+        self.recv_port = recv_port
 
     async def produce(self):
         sock = await asyncudp.create_socket(local_addr=(self.recv_ip, self.recv_port))

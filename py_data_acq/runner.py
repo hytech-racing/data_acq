@@ -45,8 +45,8 @@ def main():
         path_to_bin = os.environ.get("BIN_PATH")
         path_to_dbc = os.environ.get("DBC_PATH")
         path_to_eth_bin = os.environ.get("HT_ETH_BIN_PATH")
-        recv_ip = "127.0.0.1"
-        mcu_ip = "127.0.0.1"
+        recv_ip = "192.168.1.69"
+        mcu_ip = "192.168.1.30"
         send_to_mcu_port = 20000
         recv_from_mcu_port = 20001
     else:
