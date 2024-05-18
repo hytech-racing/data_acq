@@ -36,8 +36,8 @@ def main():
         path_to_dbc = sys.argv[2]
         path_to_eth_bin = sys.argv[3]
         mcu_ip = sys.argv[4]
-        send_to_mcu_port = sys.argv[5]
-        recv_from_mcu_port = sys.argv[6]
+        send_to_mcu_port = int(sys.argv[5])
+        recv_from_mcu_port = int(sys.argv[6])
         recv_ip = sys.argv[7]
 
     elif len(sys.argv) == 1:
