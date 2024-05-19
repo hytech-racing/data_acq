@@ -1,4 +1,6 @@
 import queue
+import os 
+import json
 from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS
 from py_data_acq.common.common_types import QueueData, MCAPServerStatusQueueData, DataInputType
@@ -195,6 +197,35 @@ class WebApp:
         @app.route('/writing_file', methods=['GET'])
         def get_writing_file():
             return jsonify(self.writing_file), 200
+        
+        @app.route('/fields', methods=['GET'])
+        def getJSON():
+            try:
+                if os.path.exists("/etc/nixos"):
+                    with open (os.path.join(self.metadata_filepath, "metadata.json"), "r") as f:
+                        data = json.load(f)
+                    return jsonify(data)
+                else:
+                    with open (os.getcwd() +"/frontend_config/metadata.json", "r") as f:
+                        data = json.load(f)
+                    return jsonify(data)
+            except FileNotFoundError:
+                return jsonify({'error': 'File not found'}), 400
+
+        @app.route('/saveFields', methods=['POST'])
+        def saveFields():
+            newFields = json.loads(request.data, strict = False)
+            try:
+                if os.path.exists("/etc/nixos"):
+                    with open (os.path.join(self.metadata_filepath, "metadata.json"), "w") as f:
+                        f.write(newFields)
+                    return jsonify(message='success')
+                else:
+                    with open (os.getcwd() + "/frontend_config/metadata.json", "w") as f:
+                        f.write(newFields)
+                    return jsonify(message='success')
+            except FileNotFoundError:
+                return jsonify({'error': 'File not found'}), 400
 
         return app
 
