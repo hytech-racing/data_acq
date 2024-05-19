@@ -19,7 +19,7 @@ class HTPBMcapWriter:
             self.actual_path = os.path.join(mcap_base_path, date_time_filename)
             self.writing_file = open(self.actual_path, "wb")
             self.mcap_writer_class = Writer(self.writing_file)
-            self.is_writing = True
+            self.is_writing = False 
         else:
             self.is_writing = False
             self.actual_path = None
@@ -111,3 +111,6 @@ class HTPBMcapWriter:
         async with self as writer:
             while True:
                 await writer.handle_data(asyncio_msg_queue)
+
+    async def write_metadata(self, name, metadata):
+        self.mcap_writer_class._writer.add_metadata(name, metadata)
