@@ -142,9 +142,9 @@ class WebApp:
         @app.route('/start', methods=['POST'])
         def start_recording():
             if self.attempting_start_stop:
-                return "Already attempting to start or stop recording", 503
+                return jsonify("Already attempting to start or stop recording"), 503
             if self.is_writing:
-                return "Cannot start recording when already recording", 400
+                return jsonify("Cannot start recording when already recording"), 400
 
             file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue,
                                                         status_queue=self.status_queue)
@@ -155,16 +155,16 @@ class WebApp:
         @app.route('/stop', methods=['POST'])
         def stop_recording():
             if self.attempting_start_stop:
-                return "Already attempting to start or stop recording", 503
+                return jsonify("Already attempting to start or stop recording"), 503
             if not self.is_writing:
-                return "Cannot stop recording when not currently recording", 400
+                return jsonify("Cannot stop recording when not currently recording"), 400
 
             file_name = self.start_stop_mcap_generation(input_cmd=False, cmd_queue=self.cmd_queue,
                                                         status_queue=self.status_queue)
 
             self.recordings.append({'status': 'stopped', 'filename': file_name})
 
-            return "Stopped Recording", 200
+            return jsonify("Stopped Recording"), 200
 
         @app.route('/params', methods=['GET'])
         def get_params():
@@ -173,7 +173,7 @@ class WebApp:
 
             return jsonify(self.parameters), 200
 
-        @app.route('params', methods=['POST'])
+        @app.route('/params', methods=['POST'])
         def update_params():
             for key in self.parameters:
                 if self.parameters[key]['type'] == 'number':
@@ -182,7 +182,19 @@ class WebApp:
                     self.parameters[key]['value'] = request.form.get(key) == 'on'
             self._send_new_params(self.parameters)
 
-            return "Success", 200
+            return jsonify("Success"), 200
+
+        @app.route('/recordings', methods=['GET'])
+        def get_recordings():
+            return jsonify(self.parameters), 200
+
+        @app.route('/errors', methods=['GET'])
+        def get_errors():
+            return jsonify(self.errors), 200
+
+        @app.route('/writing_file', methods=['GET'])
+        def get_writing_file():
+            return jsonify(self.writing_file), 200
 
         return app
 
