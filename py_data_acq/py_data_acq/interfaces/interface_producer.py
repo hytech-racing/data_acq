@@ -22,7 +22,6 @@ class UDPInterface:
         sock = await asyncudp.create_socket(local_addr=(self.recv_ip, self.recv_port))
         try:
             while True:
-                print("awaiting recv")
                 data, addr = await sock.recvfrom()
                 self.process_data(data, addr)
         except asyncio.CancelledError:
@@ -38,9 +37,8 @@ class UDPInterface:
                 if field_desc.message_type is not None:
                     composite_msg = getattr(union_msg, field_desc.name)
                     queue_data = QueueData(composite_msg.DESCRIPTOR.name, composite_msg, DataInputType.ETHERNET_DATA)
-                    print(f"Received message from {addr}: {composite_msg}")
+                    
                     if composite_msg.DESCRIPTOR.name == 'config':
-                        print('Got response config msg')
                         self.config_output_queue.put(queue_data)
                     self.output_queue.put(queue_data)
         except Exception as e:
@@ -61,25 +59,24 @@ class CANInterface:
         while True:
             # Wait for the next message from the buffer
             msg = await reader.get_message()
-            # print("got msg")
+            
             id = msg.arbitration_id
             try:
                 decoded_msg = self.can_msg_decoder.decode_message(
                     msg.arbitration_id, msg.data, decode_containers=True
                 )
-                # print("decoded CAN msg")
+                
                 msg = self.can_msg_decoder.get_message_by_frame_id(msg.arbitration_id)
-                # print("got msg by id")
+                
                 msg = pack_protobuf_msg(
                     decoded_msg, msg.name.lower(), self.message_classes
                 )
-                # print("created pb msg successfully")
+                
                 data = QueueData(msg.DESCRIPTOR.name, msg, DataInputType.CAN_DATA)
                 self.out_queue.put(data)
                 
             except Exception as e:
-                # print(id)
-                # print(e)
+                
                 pass
 
         # Don't forget to stop the notifier to clean up resources.

@@ -41,7 +41,6 @@ class SharedQueueManager:
         """
 
         if queue_data.pb_msg.HasField("config_"):
-            print("got feedback")
             await self.param_msg_queue.put(
                 QueueData(
                     queue_data.pb_msg.config_.DESCRIPTOR.name, queue_data.pb_msg.config_

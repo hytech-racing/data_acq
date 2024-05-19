@@ -12,7 +12,7 @@
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
     ht_can_pkg_flake.url = "github:hytech-racing/ht_can/92";
-    ht_params.url = "github:hytech-racing/HT_params/just_descriptions";
+    ht_params.url = "github:hytech-racing/HT_params/2024-05-19T03_07_29";
     nix-proto = { url = "github:notalltim/nix-proto"; };
   };
 

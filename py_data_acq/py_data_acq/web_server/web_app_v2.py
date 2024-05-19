@@ -74,7 +74,7 @@ class WebApp:
         # clear the receiving queue to make sure the config we receive is the latest one
         while not self.config_status_queue.empty():
             trash_config = self.config_status_queue.get()
-        print("attempting to output from web app")
+        # print("attempting to output from web app")
         self.webapp_output_msg_queue.put(QueueData(union_msg.DESCRIPTOR.name, union_msg, data_type=DataInputType.ETHERNET_DATA))
     def _await_and_update_params(self):
         response = self.config_status_queue.get()
@@ -88,7 +88,7 @@ class WebApp:
         cmd_queue.put(QueueData(web_app_command.DESCRIPTOR.name, web_app_command, data_type=DataInputType.WEB_APP_DATA))
         # get the response from the status queue
         message = status_queue.get()
-        print("got feedback!", message.is_writing, message.writing_file)
+        # print("got feedback!", message.is_writing, message.writing_file)
         if message.is_writing:
             self.is_writing = True
             self.writing_file = message.writing_file
@@ -120,7 +120,7 @@ class WebApp:
                         file_name = self.start_stop_mcap_generation(input_cmd=False, cmd_queue=self.cmd_queue, status_queue=self.status_queue)
                         self.recordings.append({'status': 'stopped', 'filename': file_name})
                     elif action =='get_params':
-                        print("getting params")
+                        # print("getting params")
                         self._request_current_params()
                         self._await_and_update_params()
                 else:

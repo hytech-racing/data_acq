@@ -101,16 +101,16 @@
         "nixpkgs": "nixpkgs_5"
       },
       "locked": {
-        "lastModified": 1715863924,
-        "narHash": "sha256-3Iz6ilcsrseXE2H+xSfOFb/ADElz4F4f3ZcRmCKCPDE=",
+        "lastModified": 1716088006,
+        "narHash": "sha256-2oycNIlMDvEuQJXfjZkzH6nHM0qJR8FwEbtQZt4QLuA=",
         "owner": "hytech-racing",
         "repo": "HT_params",
-        "rev": "aa50794b8eb7ce395b3bc829c6f297091f76a29f",
+        "rev": "616e4355f8eacf0d91294135ce5a4507433a51b8",
         "type": "github"
       },
       "original": {
         "owner": "hytech-racing",
-        "ref": "just_descriptions",
+        "ref": "2024-05-19T03_07_29",
         "repo": "HT_params",
         "type": "github"
       }

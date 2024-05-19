@@ -28,7 +28,7 @@ class HTPBMcapWriter:
 
     def __await__(self):
         async def closure():
-            print("await")
+            
             return self
 
         return closure().__await__()
@@ -69,7 +69,7 @@ class HTPBMcapWriter:
 
     async def write_msg(self, msg, data_type: DataInputType):
         if self.is_writing:
-            # print(msg)
+            
             if data_type is DataInputType.CAN_DATA:
                 self.mcap_writer_class.write_message(
                     topic="CAN/"+msg.DESCRIPTOR.name + "_data",
@@ -85,12 +85,11 @@ class HTPBMcapWriter:
                     publish_time=int(time.time_ns()),
                 )
             self.writing_file.flush()
-        else:
-            print("not writing msg")
+        
         if data_type is DataInputType.WEB_APP_DATA:
-            print(msg)
+            
             writing_command_input = msg.writing
-            print("got cmd from web app ",msg)
+            
             if writing_command_input:
                 await self.open_new_writer()
                 self.status_output_queue.put(MCAPServerStatusQueueData(True, self.actual_path))
@@ -102,11 +101,9 @@ class HTPBMcapWriter:
 
     async def handle_data(self, queue):
         msg = await queue.get()
-        if msg is not None:
-            # print(msg.pb_msg)
+        if msg is not None:    
             return await self.write_msg(msg.pb_msg, msg.data_type)
-        else:
-            print("error, not actually")
+        
     async def consume(self, asyncio_msg_queue):
         async with self as writer:
             while True:
