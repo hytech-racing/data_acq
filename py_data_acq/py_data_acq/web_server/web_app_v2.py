@@ -1,5 +1,5 @@
 import queue
-from flask import Flask, request, render_template, abort
+from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS
 from py_data_acq.common.common_types import QueueData, MCAPServerStatusQueueData, DataInputType
 from hytech_eth_np_proto_py import ht_eth_pb2
@@ -141,10 +141,8 @@ class WebApp:
 
         @app.route('/start', methods=['POST'])
         def start_recording():
-
             if self.attempting_start_stop:
                 return "Already attempting to start or stop recording", 503
-
             if self.is_writing:
                 return "Cannot start recording when already recording", 400
 
@@ -154,12 +152,10 @@ class WebApp:
 
             return "Started Recording", 200
 
-        @app.route('/stop', methods=['GET'])
+        @app.route('/stop', methods=['POST'])
         def stop_recording():
-
             if self.attempting_start_stop:
                 return "Already attempting to start or stop recording", 503
-
             if not self.is_writing:
                 return "Cannot stop recording when not currently recording", 400
 
@@ -169,6 +165,24 @@ class WebApp:
             self.recordings.append({'status': 'stopped', 'filename': file_name})
 
             return "Stopped Recording", 200
+
+        @app.route('/params', methods=['GET'])
+        def get_params():
+            self._request_current_params()
+            self._await_and_update_params()
+
+            return jsonify(self.parameters), 200
+
+        @app.route('params', methods=['POST'])
+        def update_params():
+            for key in self.parameters:
+                if self.parameters[key]['type'] == 'number':
+                    self.parameters[key]['value'] = float(request.form.get(key, 0.0))
+                elif self.parameters[key]['type'] == 'bool':
+                    self.parameters[key]['value'] = request.form.get(key) == 'on'
+            self._send_new_params(self.parameters)
+
+            return "Success", 200
 
         return app
 
