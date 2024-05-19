@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {AddrToggle} from "../Components/AddrToggle";
-import {PageTitle} from "../Components/PageTitle";
+import {AddrToggle} from "./Header/AddrToggle";
+import {PageTitle} from "./Header/PageTitle";
 import {getURL} from "../Util/ServerAddrUtil";
 
 export function EditSSOT({}) {

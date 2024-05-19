@@ -2,11 +2,12 @@ import React, {useEffect, useState} from 'react';
 import {getDefaultData} from "../Util/DataUtil";
 import {getURL} from "../Util/ServerAddrUtil";
 import {EditModeToggle} from "../Components/EditModeToggle";
-import {AddrToggle} from "../Components/AddrToggle";
-import {PageTitle} from "../Components/PageTitle";
+import {AddrToggle} from "./Header/AddrToggle";
+import {PageTitle} from "./Header/PageTitle";
 import {Field} from "../Components/Field";
 import {StartStopButton} from "../Components/StartStopButton";
 import {OffloadButton} from "../Components/OffloadButton";
+import {Header} from "./Header/Header";
 
 export function MCAPRecorder({}) {
 
@@ -46,6 +47,7 @@ export function MCAPRecorder({}) {
     return (
         <>
             <main>
+                <Header/>
                 <div className={"flex flex-col gap-4 items-center justify-center pt-6"}>
                     <AddrToggle useLocalhost={useLocalhost} setUseLocalhost={setUseLocalhost}/>
                     <div className={"flex"}>

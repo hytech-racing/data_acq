@@ -4,6 +4,7 @@ import {BrowserRouter, Routes, Route} from "react-router-dom";
 import {MCAPRecorder} from "./Pages/MCAPRecorder";
 import {EditSSOT} from "./Pages/EditSSOT";
 import {Files} from "./Pages/Files"
+import {Header} from "./Pages/Header/Header"
 
 function App() {
     return (

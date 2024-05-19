@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {FileInfo} from "../Components/FileInfo";
-import {PageTitle} from "../Components/PageTitle";
-import {AddrToggle} from "../Components/AddrToggle";
+import {PageTitle} from "./Header/PageTitle";
+import {AddrToggle} from "./Header/AddrToggle";
 
 export function Files({}) {
 
