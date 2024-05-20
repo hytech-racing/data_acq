@@ -5,7 +5,7 @@ import {EditModeToggle} from "../Components/EditModeToggle";
 import {AddrToggle} from "./Header/AddrToggle";
 import {PageTitle} from "./Header/PageTitle";
 import {Field} from "../Components/Field";
-import {StartStopButton} from "../Components/StartStopButton";
+import {StartStopButton} from "./RecordingControlPanel/StartStopButton";
 import {OffloadButton} from "../Components/OffloadButton";
 import {Header} from "./Header/Header";
 
