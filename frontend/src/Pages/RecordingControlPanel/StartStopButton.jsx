@@ -75,13 +75,6 @@ export function StartStopButton({recording, setRecording, useLocalhost, update})
 
     return (
         <div className="centered-container">
-            {recording && (
-                <article className={"prose"}>
-                    <p>
-                        Recording: {time}.mcap
-                    </p>
-                </article>
-            )}
             <button className={getButtonStyle()} onClick={toggleRecording} disabled={waitingForResponse}>
                 {getButtonText()}
             </button>

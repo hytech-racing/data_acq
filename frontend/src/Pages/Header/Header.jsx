@@ -5,15 +5,15 @@ import {AddrToggle} from "./AddrToggle";
 
 export function Header({title, useLocalhost, setUseLocalhost}) {
     return (
-        <div className={"navbar bg-base-100 items-center justify-center"}>
-            <div className={"flex flex-col items-center justify-center pt-6"}>
+        <div className={"navbar bg-base-100 items-center justify-center pb-6"}>
+            <div className={"flex flex-col gap-4 items-center justify-center pt-6"}>
                 <AddrToggle useLocalhost={useLocalhost} setUseLocalhost={setUseLocalhost}/>
                 <PageTitle text={title}></PageTitle>
 
-                <div className={"flex flex-row pt-3"}>
-                            <HeaderLink link={"/"} name={"MCAPRecorder"}/>
-                            <HeaderLink link={"ssot"} name={"Edit SSOT"}/>
-                </div>
+                <ul className={"menu menu-horizontal bg-base-200 rounded-box"}>
+                    <HeaderLink link={"/"} name={"Recording"}/>
+                    <HeaderLink link={"ssot"} name={"Edit SSOT"}/>
+                </ul>
 
             </div>
         </div>

@@ -1,11 +1,16 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {StartStopButton} from "./StartStopButton";
 import {Header} from "../Header/Header";
 import {RecordingsList} from "./RecordingsList";
 import {ErrorsList} from "./ErrorsList";
 import {SectionTitle} from "./SectionTitle";
+import {NetworkingUtils} from "../../Util/NetworkingUtils";
 
 export function RecordingControlPanel({}) {
+
+    const recordingsFiller = [{status: "started", filename: "file1.mcap"},
+                                                        {status: "stopped", filename: "file1.mcap"}]
+    const errorsFiller = ["Error 1", "Error 2"]
 
     const [useLocalhost, setUseLocalhost] = useState(false);
     const [currFile, setCurrFile] = useState(null);
@@ -14,8 +19,20 @@ export function RecordingControlPanel({}) {
     const [errors, setErrors] = useState({});
 
     async function update() {
-        // TODO
+        NetworkingUtils.getRequest(NetworkingUtils.getURL(['writing_file'], useLocalhost), null).then(response => {
+            setCurrFile(response)
+        })
+        NetworkingUtils.getRequest(NetworkingUtils.getURL(['recordings'], useLocalhost), recordingsFiller).then(response => {
+            setRecordings(response)
+        })
+        NetworkingUtils.getRequest(NetworkingUtils.getURL(['errors'], useLocalhost), errorsFiller).then(response => {
+            setErrors(response)
+        })
     }
+
+    useEffect(() => {
+        update().then()
+    }, [useLocalhost])
 
     return (
         <>
@@ -26,11 +43,11 @@ export function RecordingControlPanel({}) {
 
                 <SectionTitle title={"Current Recording File"}/>
 
-                <p>filename.mcap</p>
+                <p>{currFile == null ? "N/A" : currFile}</p>
 
-                <RecordingsList/>
+                <RecordingsList recordings={recordings}/>
 
-                <ErrorsList/>
+                <ErrorsList errors={errors}/>
 
             </div>
         </>

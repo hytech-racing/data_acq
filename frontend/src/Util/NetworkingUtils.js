@@ -1,4 +1,4 @@
-class NetworkingUtils {
+export class NetworkingUtils {
 
     /**
      * Makes a get request
@@ -20,7 +20,6 @@ class NetworkingUtils {
             let json = await fetchResponse.text()
             return JSON.parse(json)
         } catch (e) {
-            alert("WARNING: Using hardcoded values")
             return filler
         }
     }
