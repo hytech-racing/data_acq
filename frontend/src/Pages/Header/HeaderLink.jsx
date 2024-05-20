@@ -1,17 +1,19 @@
 import React from 'react';
-import {Link} from "react-router-dom";
 
-export function HeaderLink({link, name}) {
+export function HeaderLink({currPanel, setCurrPanel, panel}) {
+
+    function getStyle() {
+        if(currPanel === panel) {
+            return "btn btn-primary"
+        }
+        return "btn"
+    }
 
     return (
         <li>
-            <Link to={link} className={"pl-4 pr-4"}>
-                <article className={"prose"}>
-                    <h5>
-                        {name}
-                    </h5>
-                </article>
-            </Link>
+            <button className={getStyle()} onClick={() => setCurrPanel(panel)}>
+                {panel}
+            </button>
         </li>
     )
 

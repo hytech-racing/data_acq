@@ -6,17 +6,35 @@ import {ErrorsList} from "./ErrorsList";
 import {SectionTitle} from "./SectionTitle";
 import {NetworkingUtils} from "../../Util/NetworkingUtils";
 
-export function RecordingControlPanel({}) {
+export function RecordingControlPanel({recordingState, setRecordingState, useLocalhost}) {
 
     const recordingsFiller = [{status: "started", filename: "file1.mcap"},
                                                         {status: "stopped", filename: "file1.mcap"}]
     const errorsFiller = ["Error 1", "Error 2"]
 
-    const [useLocalhost, setUseLocalhost] = useState(false);
-    const [currFile, setCurrFile] = useState(null);
-    const [recording, setRecording] = useState(false);
-    const [recordings, setRecordings] = useState([]);
-    const [errors, setErrors] = useState({});
+    function setCurrFile(file) {
+        let newState = recordingState
+        newState.currFile = file
+        setRecordingState(newState)
+    }
+
+    function setRecording(recording) {
+        let newState = recordingState
+        newState.recording = recording
+        setRecordingState(newState)
+    }
+
+    function setRecordings(recordings) {
+        let newState = recordingState
+        newState.recordings = recordings
+        setRecordingState(newState)
+    }
+
+    function setErrors(errors) {
+        let newState = recordingState
+        newState.errors = errors
+        setRecordingState(newState)
+    }
 
     async function update() {
         NetworkingUtils.getRequest(NetworkingUtils.getURL(['writing_file'], useLocalhost), null).then(response => {
@@ -36,18 +54,16 @@ export function RecordingControlPanel({}) {
 
     return (
         <>
-            <Header title={"Recording Control Panel"} useLocalhost={useLocalhost} setUseLocalhost={setUseLocalhost}/>
-
             <div className={"flex flex-col gap-4 items-center justify-center"}>
-                <StartStopButton recording={recording} setRecording={setRecording} useLocalhost={useLocalhost} update={update}/>
+                <StartStopButton recording={recordingState.recording} setRecording={setRecording} useLocalhost={useLocalhost} update={update}/>
 
                 <SectionTitle title={"Current Recording File"}/>
 
-                <p>{currFile == null ? "N/A" : currFile}</p>
+                <p>{recordingState.currFile == null ? "N/A" : recordingState.currFile}</p>
 
-                <RecordingsList recordings={recordings}/>
+                <RecordingsList recordings={recordingState.recordings}/>
 
-                <ErrorsList errors={errors}/>
+                <ErrorsList errors={recordingState.errors}/>
 
             </div>
         </>

@@ -3,13 +3,10 @@ import {AddrToggle} from "./Header/AddrToggle";
 import {PageTitle} from "./Header/PageTitle";
 import {getURL} from "../Util/ServerAddrUtil";
 
-export function EditSSOT({}) {
-
-    const [useLocalhost, setUseLocalhost] = useState(false)
-    const [metadata, setMetadata] = useState('')
+export function EditSSOT({ssot, setSsot, useLocalhost}) {
 
     useEffect(() => {
-        updateMetadata().then(metadata => setMetadata(metadata))
+        updateMetadata().then(metadata => setSsot(metadata))
     }, [useLocalhost])
 
     async function updateMetadata() {
@@ -35,7 +32,7 @@ export function EditSSOT({}) {
         try {
             const fetchResponse = await fetch(getURL('saveFields', useLocalhost), {
                 method: 'POST',
-                body: JSON.stringify(JSON.stringify(JSON.parse(metadata), null, 4)),
+                body: JSON.stringify(JSON.stringify(JSON.parse(ssot), null, 4)),
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json'
@@ -45,28 +42,21 @@ export function EditSSOT({}) {
             alert(e)
         }
         
-        updateMetadata().then(metadata => setMetadata(metadata))
+        updateMetadata().then(metadata => setSsot(metadata))
     }
 
     return (
         <>
             <main>
                 <div className={"flex flex-col gap-4 items-center justify-center pt-6"}>
-                    <AddrToggle useLocalhost={useLocalhost} setUseLocalhost={setUseLocalhost}/>
-                    <div className={"flex"}>
-                        <PageTitle text={"Metadata Editor"}/>
-                    </div>
-                </div>
-
-                <div className={"flex flex-col gap-4 items-center justify-center pt-6"}>
-                    <textarea className={"textarea textarea-bordered w-80 h-[70dvh] resize-none"} value={metadata}
-                              onChange={e => setMetadata(e.target.value)} wrap={'off'}></textarea>
+                    <textarea className={"textarea textarea-bordered w-80 h-[60dvh] resize-none"} value={ssot}
+                              onChange={e => setSsot(e.target.value)} wrap={'off'}></textarea>
                 </div>
             </main>
             <footer className={"sticky bottom-0 bg-base-100"}>
-                <div className={"flex flex-row gap-4 pt-6"}>
+                <div className={"flex flex-row gap-2 pt-4"}>
                     <div className={"grow w-max"}/>
-                    <button className={"btn"} onClick={() => updateMetadata().then(metadata => setMetadata(metadata))}>
+                    <button className={"btn"} onClick={() => updateMetadata().then(metadata => setSsot(metadata))}>
                         Reset
                     </button>
                     <button className={"btn btn-success"} onClick={saveMetadata}>
