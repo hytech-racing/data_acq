@@ -12,7 +12,7 @@
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
     ht_can_pkg_flake.url = "github:hytech-racing/ht_can/92";
-    ht_params.url = "github:hytech-racing/HT_params/just_descriptions";
+    ht_params.url = "github:hytech-racing/HT_params/frontend-metadata";
     nix-proto = { url = "github:notalltim/nix-proto"; };
   };
 
@@ -55,6 +55,9 @@
       py_foxglove_protobuf_schemas_overlay = final: prev: {
         py_foxglove_protobuf_schemas = final.callPackage ./py_foxglove_protobuf_schemas.nix { };
       };
+      frontend_overlay = final: prev: {
+        frontend_pkg = final.callPackage ./frontend.nix { };
+      };
       nix_protos_overlays = nix-proto.generateOverlays'
         {
           hytech_np = { proto_gen_pkg }:
@@ -65,6 +68,7 @@
               version = "1.0.0";
             };
         };
+        
       my_overlays = ht_params.overlays.${system} ++ [
         (self: super: {
           cantools = super.cantools.overridePythonAttrs (old: rec {
@@ -80,7 +84,7 @@
         py_dbc_proto_gen_overlay
         py_data_acq_overlay
         proto_gen_overlay
-
+        frontend_overlay
         ht_can_pkg_flake.overlays.default
         mcap-protobuf.overlays.default
         mcap.overlays.default
@@ -107,6 +111,7 @@
           can-utils
           nodejs
           python311Packages.scipy
+          frontend_pkg.frontend
         ];
         # Setting up the environment variables you need during
         # development.
@@ -116,7 +121,9 @@
             path=${pkgs.proto_gen_pkg}
             bin_path=$path"/bin"
             dbc_path=${pkgs.ht_can_pkg}
+            frontend_path=${pkgs.frontend_pkg.frontend}
             export HT_ETH_BIN_PATH=${pkgs.ht_eth_protos_gen_pkg}"/bin"
+            export FRONT=$frontend_path
             export BIN_PATH=$bin_path
             export DBC_PATH=$dbc_path
             echo -e "PYTHONPATH=$PYTHONPATH\nBIN_PATH=$bin_path\nDBC_PATH=$dbc_path\n" > .env
@@ -162,6 +169,7 @@
         vn_protos_np = pkgs.vn_protos_np;
         hytech_np_proto_py = pkgs.hytech_np_proto_py;
         vn_protos_np_proto_py = pkgs.vn_protos_np_proto_py;
+        frontend_pkg = pkgs.frontend_pkg.frontend;
       };
 
     });

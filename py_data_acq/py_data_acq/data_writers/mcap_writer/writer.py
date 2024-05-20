@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Optional, Set
 import os
 import queue
-
+import json
 
 class HTPBMcapWriter:
     def __init__(self, mcap_base_path, init_writing: bool, status_output_queue: queue.Queue[MCAPServerStatusQueueData]):
@@ -19,7 +19,7 @@ class HTPBMcapWriter:
             self.actual_path = os.path.join(mcap_base_path, date_time_filename)
             self.writing_file = open(self.actual_path, "wb")
             self.mcap_writer_class = Writer(self.writing_file)
-            self.is_writing = True
+            self.is_writing = False 
         else:
             self.is_writing = False
             self.actual_path = None
@@ -48,18 +48,18 @@ class HTPBMcapWriter:
         self.mcap_writer_class.finish()
         self.writing_file.close()
 
-    async def close_writer(self):
+    async def close_writer(self, metadata):
         if self.is_writing:
+            await self.write_metadata("setup", json.loads(metadata))
             self.is_writing = False
             self.mcap_writer_class.finish()
             self.writing_file.close()
 
         return True
 
-    async def open_new_writer(self):
+    async def open_new_writer(self, startTime):
         if not self.is_writing:
-            now = datetime.now()
-            date_time_filename = now.strftime("%m_%d_%Y_%H_%M_%S" + ".mcap")
+            date_time_filename = json.loads(startTime)["time"] + ".mcap"
             self.actual_path = os.path.join(self.base_path, date_time_filename)
             self.writing_file = open(self.actual_path, "wb")
             self.mcap_writer_class = Writer(self.writing_file)
@@ -92,10 +92,10 @@ class HTPBMcapWriter:
             writing_command_input = msg.writing
             print("got cmd from web app ",msg)
             if writing_command_input:
-                await self.open_new_writer()
+                await self.open_new_writer(msg.metadata)
                 self.status_output_queue.put(MCAPServerStatusQueueData(True, self.actual_path))
             else:
-                await self.close_writer()
+                await self.close_writer(msg.metadata)
                 self.status_output_queue.put(MCAPServerStatusQueueData(False, self.actual_path))
             
         return True
@@ -111,3 +111,8 @@ class HTPBMcapWriter:
         async with self as writer:
             while True:
                 await writer.handle_data(asyncio_msg_queue)
+
+    async def write_metadata(self, name, metadata):
+        print(type(metadata))
+        print(metadata)
+        self.mcap_writer_class._writer.add_metadata(name, metadata)

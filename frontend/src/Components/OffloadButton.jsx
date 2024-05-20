@@ -1,12 +1,10 @@
-
 import React from 'react'
+import {getURL} from "../Util/ServerAddrUtil";
 
 export function OffloadButton() {
 
-    const webserverURL = 'http://192.168.203.1:6969'
-
     async function offload() {
-        const fetchResponse = await fetch(webserverURL + '/offload', {
+        const fetchResponse = await fetch(getURL('offload', useLocalhost), {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
