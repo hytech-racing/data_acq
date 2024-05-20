@@ -89,6 +89,7 @@ class WebApp:
         self.attempting_start_stop = True
         web_app_command = ht_eth_pb2.web_app_command()
         web_app_command.writing = input_cmd
+        web_app_command.metadata = metadata
         # input the command into the command queue
         cmd_queue.put(QueueData(web_app_command.DESCRIPTOR.name, web_app_command, data_type=DataInputType.WEB_APP_DATA))
         # get the response from the status queue
@@ -148,8 +149,7 @@ class WebApp:
                 return jsonify("Already attempting to start or stop recording"), 503
             if self.is_writing:
                 return jsonify("Cannot start recording when already recording"), 400
-            requestData = request.get_json() #metadata
-            print(type(requestData))
+            requestData = json.dumps(request.get_json()) #start time as str
             file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue,
                                                         status_queue=self.status_queue, metadata=requestData)
             self.recordings.append({'status': 'started', 'filename': file_name})
@@ -162,9 +162,9 @@ class WebApp:
                 return jsonify("Already attempting to start or stop recording"), 503
             if not self.is_writing:
                 return jsonify("Cannot stop recording when not currently recording"), 400
-
+            requestData = json.dumps(request.get_json()) #metadata json as str
             file_name = self.start_stop_mcap_generation(input_cmd=False, cmd_queue=self.cmd_queue,
-                                                        status_queue=self.status_queue)
+                                                        status_queue=self.status_queue, metadata=requestData)
 
             self.recordings.append({'status': 'stopped', 'filename': file_name})
 
