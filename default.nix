@@ -5,6 +5,7 @@
 , py_foxglove_websocket_pkg
 , asyncudp_pkg
 , proto_gen_pkg
+, py_foxglove_proto_schemas_pkg
 , hytech_eth_np_proto_py
 , hytech_np_proto_py
 }:
@@ -31,6 +32,7 @@ python311Packages.buildPythonApplication {
     proto_gen_pkg
     python311Packages.flask
     python311Packages.flask-cors
+    py_foxglove_proto_schemas_pkg
     python311Packages.hypercorn
     python311Packages.quart
 

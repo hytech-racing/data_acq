@@ -12,7 +12,7 @@ python311Packages.buildPythonPackage rec {
 
   # Extract the specific subdirectory within the repository
   propagatedBuildInputs = [  python311Packages.setuptools ];
-  src = src_repo + "/python/foxglove-schemas-protobuf";  # Adjust the path to your desired subdirectory
+  src = src_repo;  # Adjust the path to your desired subdirectory
 
   meta = with lib; {
     description = "foxglove protobuf schemas";
