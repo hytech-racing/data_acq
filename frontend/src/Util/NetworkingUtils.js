@@ -1,3 +1,4 @@
+
 export class NetworkingUtils {
 
     /**
@@ -49,15 +50,15 @@ export class NetworkingUtils {
             return {success: false, response: 'Fetch failed'}
         }
     }
-
+    //TODO: refactor old code to use networking utils instead of ServerAddrUtils
     static getURL(route, useLocalhost) {
         let ret = ''
         if (useLocalhost) {
-            ret += 'http://localhost:6969'
+            ret += 'http://localhost:8888'
         } else {
-            ret += 'http://192.168.203.1:6969'
+            ret += 'http://192.168.203.1:8888'
         }
-        for (let r in route) {
+        for (let r of route) {
             ret += '/'
             ret += r
         }
