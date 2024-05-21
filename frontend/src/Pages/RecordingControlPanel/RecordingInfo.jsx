@@ -4,9 +4,9 @@ export function RecordingInfo({recordings, idx}) {
     return (
         <div className={"alert join-item -mt-2 -mb-1 border-base-content"}>
             <div className={"flex flex-row w-96"}>
-                <p>Filename.mcap</p>
+                <p>{recordings[idx].filename}</p>
                 <div className={"grow w-max"}/>
-                <p>Started</p>
+                <p>{recordings[idx].status}</p>
             </div>
         </div>
     )

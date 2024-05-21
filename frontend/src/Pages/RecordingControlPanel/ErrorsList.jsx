@@ -2,7 +2,7 @@ import React from 'react';
 import {SectionTitle} from "./SectionTitle";
 import {ErrorInfo} from "./ErrorInfo";
 
-export function ErrorsList({errors}) {
+export function ErrorsList(errors) {
 
     function getErrorRows() {
         let errorRows = []

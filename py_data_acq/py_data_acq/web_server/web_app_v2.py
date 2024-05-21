@@ -27,7 +27,7 @@ class WebApp:
             self.writing_file = init_filename
         else:
             self.writing_file = "N/A"
-        self.is_writing = False #init_writing
+        self.is_writing = init_writing
         self.config_status_queue = config_status_queue
         self.webapp_output_msg_queue = output_msg_queue  # queue containing config updates for now (these msgs get sent directly over the UDP interface)
         self.cmd_queue = writer_command_queue  # mcap writer output queue
@@ -145,15 +145,18 @@ class WebApp:
         @app.route('/start', methods=['POST'])
         def start_recording():
             print("Start Route Called")
-            if self.attempting_start_stop:
-                return jsonify("Already attempting to start or stop recording"), 503
-            if self.is_writing:
-                return jsonify("Cannot start recording when already recording"), 400
-            requestData = json.dumps(request.get_json()) #start time as str
-            file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue,
-                                                        status_queue=self.status_queue, metadata=requestData)
-            self.recordings.append({'status': 'started', 'filename': file_name})
-
+            try:
+                if self.attempting_start_stop:
+                    return jsonify("Already attempting to start or stop recording"), 503
+                if self.is_writing:
+                    print("Cannot start recording when already recording")
+                    return jsonify("Cannot start recording when already recording"), 400
+                requestData = json.dumps(request.get_json()) #start time as str
+                file_name = self.start_stop_mcap_generation(input_cmd=True, cmd_queue=self.cmd_queue,
+                                                            status_queue=self.status_queue, metadata=requestData)
+                self.recordings.append({'status': 'started', 'filename': file_name})
+            except Exception as e:
+                print(e)
             return "Started Recording", 200
 
         @app.route('/stop', methods=['POST'])
@@ -166,7 +169,7 @@ class WebApp:
             file_name = self.start_stop_mcap_generation(input_cmd=False, cmd_queue=self.cmd_queue,
                                                         status_queue=self.status_queue, metadata=requestData)
 
-            self.recordings.append({'status': 'stopped', 'filename': file_name})
+            self.recordings[-1]['status'] = "stopped"
 
             return jsonify("Stopped Recording"), 200
 
@@ -174,7 +177,6 @@ class WebApp:
         def get_params():
             self._request_current_params()
             self._await_and_update_params()
-
             return jsonify(self.parameters), 200
 
         @app.route('/params', methods=['POST'])
@@ -190,7 +192,9 @@ class WebApp:
 
         @app.route('/recordings', methods=['GET'])
         def get_recordings():
-            return jsonify(self.parameters), 200
+            recordingState = [self.writing_file, self.is_writing, self.recordings, self.errors]
+            print(recordingState)
+            return jsonify(recordingState), 200
 
         @app.route('/errors', methods=['GET'])
         def get_errors():

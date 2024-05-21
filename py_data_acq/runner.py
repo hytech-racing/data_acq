@@ -112,7 +112,7 @@ def main():
         webapp_consumer_queue,
         webapp_mcap_writer_command_queue,
         webapp_output_queue,
-        init_writing=True,
+        init_writing=False, #True
         init_filename=consumer.get_current_mcap_writer_filename(),
         host="127.0.0.1",
         port=8888,
