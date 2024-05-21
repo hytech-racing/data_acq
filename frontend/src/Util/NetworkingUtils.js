@@ -36,7 +36,7 @@ export class NetworkingUtils {
             const fetchResponse = await fetch(url, {
                 signal: AbortSignal.timeout(maxWait),
                 method: 'POST',
-                body: body,
+                body: JSON.stringify(body),
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json'

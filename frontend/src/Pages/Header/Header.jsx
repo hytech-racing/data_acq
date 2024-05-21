@@ -12,6 +12,7 @@ export function Header({currPanel, setCurrPanel, useLocalhost, setUseLocalhost})
 
                 <ul className={"menu menu-horizontal bg-base-200 rounded-box"}>
                     <HeaderLink currPanel={currPanel} setCurrPanel={setCurrPanel} panel={"Recording"}/>
+                    <HeaderLink currPanel={currPanel} setCurrPanel={setCurrPanel} panel={"Params"}/>
                     <HeaderLink currPanel={currPanel} setCurrPanel={setCurrPanel} panel={"Edit SSOT"}/>
                 </ul>
             </div>

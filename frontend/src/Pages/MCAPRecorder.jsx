@@ -4,7 +4,7 @@ import {getURL} from "../Util/ServerAddrUtil";
 import {EditModeToggle} from "../Components/EditModeToggle";
 import {AddrToggle} from "./Header/AddrToggle";
 import {PageTitle} from "./Header/PageTitle";
-import {Field} from "../Components/Field";
+import {Field} from "./ParamsControlPanel/Field";
 import {StartStopButton} from "./RecordingControlPanel/StartStopButton";
 import {OffloadButton} from "../Components/OffloadButton";
 import {Header} from "./Header/Header";

@@ -5,6 +5,7 @@ import {EditSSOT} from "./Pages/EditSSOT";
 import {Files} from "./Pages/Files"
 import {Header} from "./Pages/Header/Header"
 import {RecordingControlPanel} from "./Pages/RecordingControlPanel/RecordingControlPanel";
+import {ParamsControlPanel} from "./Pages/ParamsControlPanel/ParamsControlPanel";
 
 function App() {
 
@@ -13,6 +14,7 @@ function App() {
 
     const [recordingState, setRecordingState] = useState({currFile: null, recording: false, recordings: [], errors: []})
     const [ssot, setSsot] = useState('')
+    const [params, setParams] = useState({})
 
     function getPanel() {
         if (currPanel === "Recording"){
@@ -22,6 +24,10 @@ function App() {
         } else if (currPanel === "Edit SSOT"){
             return (
                 <EditSSOT ssot={ssot} setSsot={setSsot} useLocalhost={useLocalhost}/>
+            )
+        } else if (currPanel === "Params") {
+            return (
+                <ParamsControlPanel params={params} setParams={setParams} useLocalhost={useLocalhost}/>
             )
         } else {
             return (

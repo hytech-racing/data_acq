@@ -53,20 +53,18 @@ export function RecordingControlPanel({recordingState, setRecordingState, useLoc
     }, [useLocalhost])
 
     return (
-        <>
-            <div className={"flex flex-col gap-4 items-center justify-center"}>
-                <StartStopButton recording={recordingState.recording} setRecording={setRecording} useLocalhost={useLocalhost} update={update}/>
+        <div className={"flex flex-col gap-4 items-center justify-center"}>
+            <StartStopButton recording={recordingState.recording} setRecording={setRecording} useLocalhost={useLocalhost} update={update}/>
 
-                <SectionTitle title={"Current Recording File"}/>
+            <SectionTitle title={"Current Recording File"}/>
 
-                <p>{recordingState.currFile == null ? "N/A" : recordingState.currFile}</p>
+            <p>{recordingState.currFile == null ? "N/A" : recordingState.currFile}</p>
 
-                <RecordingsList recordings={recordingState.recordings}/>
+            <RecordingsList recordings={recordingState.recordings}/>
 
-                <ErrorsList errors={recordingState.errors}/>
+            <ErrorsList errors={recordingState.errors}/>
 
-            </div>
-        </>
+        </div>
     )
 
 }
