@@ -1,18 +1,15 @@
+import cv2
 import asyncio
-
 import time
-from mcap_protobuf.writer import Writer
-from py_data_acq.common.common_types import QueueData, DataInputType, MCAPServerStatusQueueData
+import os
 from datetime import datetime
 from typing import Any, Optional, Set
-import os
-import queue
-
-
+from mcap_protobuf.writer import Writer
+from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
+ 
 class HTPBMcapWriter:
-    def __init__(self, mcap_base_path, init_writing: bool, status_output_queue: queue.Queue[MCAPServerStatusQueueData]):
+    def __init__(self, mcap_base_path, init_writing: bool):
         self.base_path = mcap_base_path
-        self.status_output_queue = status_output_queue
         if init_writing:
             now = datetime.now()
             date_time_filename = now.strftime("%m_%d_%Y_%H_%M_%S" + ".mcap")
@@ -20,91 +17,101 @@ class HTPBMcapWriter:
             self.writing_file = open(self.actual_path, "wb")
             self.mcap_writer_class = Writer(self.writing_file)
             self.is_writing = True
+            
         else:
             self.is_writing = False
             self.actual_path = None
             self.writing_file = None
             self.mcap_writer_class = None
-
+ 
     def __await__(self):
         async def closure():
-            
+            print("await")
             return self
-
+ 
         return closure().__await__()
-
+ 
     def __enter__(self):
         return self
-
+ 
     def __exit__(self, exc_, exc_type_, tb_):
-        self.mcap_writer_class.finish()
-        self.writing_file.close()
-
+        self.close_writer()
+ 
     def __aenter__(self):
         return self
-
+ 
     async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):
-        
-        self.mcap_writer_class.finish()
-        self.writing_file.close()
-
+        self.close_writer()
+ 
     async def close_writer(self):
+        if self.video_task:
+                self.video_task.cancel()  # Cancel the video recording task
+                try:
+                    await self.video_task  # Ensure the task is fully closed
+                except asyncio.CancelledError:
+                    pass
+        if self.video_capture:
+            self.video_capture.release()  # Release the webcam
         if self.is_writing:
             self.is_writing = False
             self.mcap_writer_class.finish()
             self.writing_file.close()
-
-        return True
-
+ 
     async def open_new_writer(self):
-        if not self.is_writing:
-            now = datetime.now()
-            date_time_filename = now.strftime("%m_%d_%Y_%H_%M_%S" + ".mcap")
-            self.actual_path = os.path.join(self.base_path, date_time_filename)
-            self.writing_file = open(self.actual_path, "wb")
-            self.mcap_writer_class = Writer(self.writing_file)
-            self.is_writing = True
-
-        return True
-
-    async def write_msg(self, msg, data_type: DataInputType):
         if self.is_writing:
-            
-            if data_type is DataInputType.CAN_DATA:
-                self.mcap_writer_class.write_message(
-                    topic="CAN/"+msg.DESCRIPTOR.name + "_data",
-                    message=msg,
-                    log_time=int(time.time_ns()),
-                    publish_time=int(time.time_ns()),
-                )
-            if data_type is DataInputType.ETHERNET_DATA:
-                self.mcap_writer_class.write_message(
-                    topic="ETH/"+msg.DESCRIPTOR.name + "_data",
-                    message=msg,
-                    log_time=int(time.time_ns()),
-                    publish_time=int(time.time_ns()),
-                )
-            self.writing_file.flush()
-        
-        if data_type is DataInputType.WEB_APP_DATA:
-            
-            writing_command_input = msg.writing
-            
-            if writing_command_input:
-                await self.open_new_writer()
-                self.status_output_queue.put(MCAPServerStatusQueueData(True, self.actual_path))
-            else:
-                await self.close_writer()
-                self.status_output_queue.put(MCAPServerStatusQueueData(False, self.actual_path))
-            
-        return True
+            self.close_writer()
+ 
+        now = datetime.now()
+        date_time_filename = now.strftime("%m_%d_%Y_%H_%M_%S" + ".mcap")
+        self.actual_path = os.path.join(self.base_path, date_time_filename)
+        self.writing_file = open(self.actual_path, "wb")
+        self.mcap_writer_class = Writer(self.writing_file)
+        self.is_writing = True
+        self.video_capture = cv2.VideoCapture(0)
+        self.video_task = asyncio.create_task(self.record_video())
 
-    async def handle_data(self, queue):
-        msg = await queue.get()
-        if msg is not None:    
-            return await self.write_msg(msg.pb_msg, msg.data_type)
+ 
+    async def record_video(self):
+        while self.is_writing:
+            ret, frame = self.video_capture.read()
+            if not ret:
+                break
+            compressed_image = self.compress_frame_to_protobuf(frame)
+            timestamp = int(time.time() * 1e9)  # Nanoseconds
+            self.writer.write_message(
+                topic=compressed_image.DESCRIPTOR.name + "_data",
+                message=compressed_image,
+                log_time=timestamp,
+                publish_time=timestamp
+            )
+            self.writing_file.flush()
+            cv2.imshow("Video", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+        cv2.destroyAllWindows()
         
-    async def consume(self, asyncio_msg_queue):
-        async with self as writer:
-            while True:
-                await writer.handle_data(asyncio_msg_queue)
+ 
+    async def write_msg(self, msg):
+        if self.is_writing:
+            self.mcap_writer_class.write_message(
+                topic=msg.DESCRIPTOR.name + "_data",
+                message=msg,
+                log_time=int(time.time_ns()),
+                publish_time=int(time.time_ns()),
+            )
+            self.writing_file.flush()
+ 
+    async def write_data(self, queue):
+        msg = await queue.get()
+        if msg is not None:
+            await self.write_msg(msg.pb_msg)
+ 
+    def compress_frame_to_protobuf(self, frame):
+        ret, compressed_frame = cv2.imencode(".jpg", frame)
+        if not ret:
+            raise ValueError("Failed to compress frame")
+        compressed_image = CompressedImage()
+        compressed_image.format = "jpeg"
+        compressed_image.data = compressed_frame.tobytes()
+        return compressed_image
+ 

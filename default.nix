@@ -25,6 +25,7 @@ python311Packages.buildPythonApplication {
     py_foxglove_websocket_pkg
     python311Packages.protobuf
     mcap_support_pkg
+    python311Packages.opencv4
     py_mcap_pkg
     hytech_np_proto_py
     proto_gen_pkg
