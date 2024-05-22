@@ -1,6 +1,7 @@
 import {getFormattedDate} from "./DateUtil";
 
 export function getDefaultData(fields) {
+    console.log(fields)
     let data = []
     for (let i = 0; i < fields.length; i++) {
         data.push(getDefaultValue(fields[i].type))

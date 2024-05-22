@@ -16,10 +16,13 @@ function App() {
     const [ssot, setSsot] = useState('')
     const [params, setParams] = useState({})
 
+    const [fields, setFields] = useState([])
+    const [data, setData] = useState([])
+
     function getPanel() {
         if (currPanel === "Recording"){
             return (
-                <RecordingControlPanel recordingState={recordingState} setRecordingState={setRecordingState} useLocalhost={useLocalhost}/>
+                <RecordingControlPanel recordingState={recordingState} setRecordingState={setRecordingState} useLocalhost={useLocalhost} fields={fields} setFields={setFields} data={data} setData={setData}/>
             )
         } else if (currPanel === "Edit SSOT"){
             return (

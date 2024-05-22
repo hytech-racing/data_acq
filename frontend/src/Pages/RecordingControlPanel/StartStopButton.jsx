@@ -5,7 +5,7 @@ import {getFormattedDate} from "../../Util/DateUtil";
 import {getMetadata} from "../../Util/DataUtil";
 import {wait} from "@testing-library/user-event/dist/utils";
 
-export function StartStopButton({recordingState, setRecordingState, useLocalhost, update}) {
+export function StartStopButton({recordingState, setRecordingState, useLocalhost, update, fields, data}) {
 
     const [waitingForResponse, setWaitingForResponse] = useState(false);
     const [time, setTime] = useState("");
@@ -28,7 +28,7 @@ export function StartStopButton({recordingState, setRecordingState, useLocalhost
 
         setWaitingForResponse(true);
 
-        let body = '{"startTime": ' + JSON.stringify(time) + "}"//getMetadata(fields, data, time)
+        let body = getMetadata(fields, data, time)
 
         const fetchResponse = await fetch(getURL('stop', useLocalhost), {
             method: 'POST',
