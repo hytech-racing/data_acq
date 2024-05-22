@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
+from py_data_acq.data_writers.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
+from py_data_acq.data_writers.foxglove_live import HTProtobufFoxgloveServer
 from py_data_acq.interfaces.interface_producer import InterfaceProducer
 from py_data_acq.interfaces.interface_consumer import InterfaceConsumer
 from py_data_acq.data_writers.data_writers import DataConsumer
@@ -45,8 +48,8 @@ def main():
         path_to_bin = os.environ.get("BIN_PATH")
         path_to_dbc = os.environ.get("DBC_PATH")
         path_to_eth_bin = os.environ.get("HT_ETH_BIN_PATH")
-        recv_ip = "192.168.1.69"
-        mcu_ip = "192.168.1.30"
+        recv_ip = "127.0.0.1"
+        mcu_ip = "127.0.0.1"
         send_to_mcu_port = 20000
         recv_from_mcu_port = 20001
     else:
@@ -72,8 +75,6 @@ def main():
             channel=UdpMulticastBus.DEFAULT_GROUP_IPv6, interface="udp_multicast"
         )
 
-
-
     full_path_to_bin = os.path.join(path_to_bin, "hytech.bin")
     path_to_eth_bin = os.path.join(path_to_eth_bin, "ht_eth.bin")
     full_path_to_dbc = os.path.join(path_to_dbc, "hytech.dbc")
@@ -98,15 +99,17 @@ def main():
         # logger.info("detected running on nixos")
         path_to_mcap = "/home/nixos/recordings"
     # Start consumer in another thread
-    consumer = DataConsumer(
-        path_to_mcap,
-        True,
-        full_path_to_bin,
-        path_to_eth_bin,
-        webapp_mcap_writer_command_queue,
-        consumer_queue,
-        mcap_writer_feedback_queue,
-    )
+
+    mcap_data_writer_consumer = HTPBMcapWriter(path_to_mcap, True, mcap_writer_feedback_queue)
+    # consumer = DataConsumer(
+    #     path_to_mcap,
+    #     True,
+    #     full_path_to_bin,
+    #     path_to_eth_bin,
+    #     webapp_mcap_writer_command_queue,
+    #     consumer_queue,
+    #     mcap_writer_feedback_queue,
+    # )
     web_app = WebApp(
         mcap_writer_feedback_queue,
         webapp_consumer_queue,
@@ -119,15 +122,20 @@ def main():
     )
 
     output_consumer = InterfaceConsumer(webapp_output_queue, mcu_ip, send_to_mcu_port)
+
+
     msg_out_thread = threading.Thread(target=output_consumer.run)
-    consumer_thread = threading.Thread(target=consumer.run)
+    mcap_consumer_thread = threading.Thread(target=mcap_data_writer_consumer.run)
+    foxglove_consumer_thread = 
     web_app_thread = threading.Thread(target=web_app.start_server)
+
+    mcap_consumer_thread.start()
     web_app_thread.start()
-    consumer_thread.start()
+    mcap_consumer_thread.start()
     msg_out_thread.start()
 
     producer_manager.join()
-    consumer_thread.join()
+    mcap_consumer_thread.join()
 
 
 if __name__ == "__main__":

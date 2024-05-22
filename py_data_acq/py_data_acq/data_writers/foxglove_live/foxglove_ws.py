@@ -7,16 +7,18 @@ from typing import Any
 from foxglove_websocket import run_cancellable
 
 from foxglove_websocket.server import FoxgloveServer
-
+import threading
 from base64 import standard_b64encode
 import time
 
 
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
-class HTProtobufFoxgloveServer(FoxgloveServer):
+class HTProtobufFoxgloveServer(threading.Thread):
     def __init__(self, host: str, port: int, name: str, pb_bin_file_path: str, path_to_eth_bin: str, can_pb_msg_schema_names: list[str]):
-        super().__init__(host, port, name)
+        
+
+        self.foxglove_server = FoxgloveServer(host, port, name)
         self.path = pb_bin_file_path
         self.can_pb_msg_schema_names = can_pb_msg_schema_names
         eth_pb_names, eth_pb_classes = get_oneof_msg_names_and_classes()

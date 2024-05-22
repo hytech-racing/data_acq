@@ -44,19 +44,26 @@ def pack_protobuf_msg(cantools_dict: dict, msg_name: str, message_classes):
 
 def pack_cantools_msg(pb_msg_in, msg_name: str, cantools_db):
     # get the un-populated message by its name
-    msg_out = cantools_db.get_message_by_name(msg_name.upper())
-    # now we need to iterate through all of the message member variables
-    #  and set dictionary values in the can msg
-    
-    # 1. need to get the signals dictionary for this CAN msg
-    msg_sigs = msg_out.signals
-    # each signal name is an attribute within the protobuf message and we can populate 
+    try:
+        msg_out = cantools_db.get_message_by_name(msg_name.upper())
+        # now we need to iterate through all of the message member variables
+        #  and set dictionary values in the can msg
+        
+        # 1. need to get the signals dictionary for this CAN msg
+        msg_sigs = msg_out.signals
+        # each signal name is an attribute within the protobuf message and we can populate 
 
-    # 2. populate dict with values 
-    msg_dict = {}
-    for sig in msg_sigs:
-        msg_dict[sig.name] = getattr(pb_msg_in, sig.name)
-    
-    
-    out_data = msg_out.encode(msg_dict)
-    return msg_out, out_data
+        # 2. populate dict with values 
+        msg_dict = {}
+        for sig in msg_sigs:
+
+            if type(getattr(pb_msg_in, sig.name)) == str:
+                msg_dict[sig.name] = sig.choices[int(getattr(pb_msg_in, sig.name))]
+            else:
+                msg_dict[sig.name] = getattr(pb_msg_in, sig.name)
+        
+        
+        out_data = msg_out.encode(msg_dict)
+        return msg_out, out_data
+    except:
+        return None, None
