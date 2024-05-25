@@ -5,12 +5,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     utils.url = "github:numtide/flake-utils";
+
     mcap-protobuf.url = "github:RCMast3r/mcap-protobuf-support-flake";
     flake-utils.url = "github:numtide/flake-utils";
     mcap.url = "github:RCMast3r/py_mcap_nix";
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
-    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/41";
+    ht_can_pkg_flake.url = "github:hytech-racing/ht_can/97";
+    ht_params.url = "github:hytech-racing/HT_params/2024-05-19T03_07_29";
     nix-proto = { url = "github:notalltim/nix-proto"; };
   };
 
@@ -25,6 +27,7 @@
     , nix-proto
     , ht_can_pkg_flake
     , flake-utils
+    , ht_params
     , ...
     }@inputs:
     flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ] (system:
@@ -52,13 +55,6 @@
       py_foxglove_protobuf_schemas_overlay = final: prev: {
         py_foxglove_protobuf_schemas = final.callPackage ./py_foxglove_protobuf_schemas.nix { };
       };
-
-      frontend_overlay = final: prev: {
-        frontend_pkg = final.callPackage ./frontend.nix { };
-      };
-
-
-
       nix_protos_overlays = nix-proto.generateOverlays'
         {
           hytech_np = { proto_gen_pkg }:
@@ -68,18 +64,8 @@
               src = proto_gen_pkg.out + "/proto";
               version = "1.0.0";
             };
-          vn_protos_np = { hytech_np }:
-            nix-proto.mkProtoDerivation {
-              name = "vn_protos_np";
-              src = nix-proto.lib.srcFromNamespace {
-                root = ./proto;
-                namespace = "vectornav_proto";
-              };
-              version = "1.0.0";
-              protoDeps = [ hytech_np ];
-            };
         };
-      my_overlays = [
+      my_overlays = ht_params.overlays.${system} ++ [
         (self: super: {
           cantools = super.cantools.overridePythonAttrs (old: rec {
             version = "39.4.5";
@@ -94,9 +80,7 @@
         py_dbc_proto_gen_overlay
         py_data_acq_overlay
         proto_gen_overlay
-        py_foxglove_protobuf_schemas_overlay
 
-        frontend_overlay
         ht_can_pkg_flake.overlays.default
         mcap-protobuf.overlays.default
         mcap.overlays.default
@@ -123,7 +107,6 @@
           can-utils
           nodejs
           python311Packages.scipy
-          frontend_pkg.frontend
         ];
         # Setting up the environment variables you need during
         # development.
@@ -133,10 +116,9 @@
             path=${pkgs.proto_gen_pkg}
             bin_path=$path"/bin"
             dbc_path=${pkgs.ht_can_pkg}
-            frontend_path=${pkgs.frontend_pkg.frontend}
+            export HT_ETH_BIN_PATH=${pkgs.ht_eth_protos_gen_pkg}"/bin"
             export BIN_PATH=$bin_path
             export DBC_PATH=$dbc_path
-            export FRONT=$frontend_path
             echo -e "PYTHONPATH=$PYTHONPATH\nBIN_PATH=$bin_path\nDBC_PATH=$dbc_path\n" > .env
             export PS1="$(echo -e '\u${icon}') {\[$(tput sgr0)\]\[\033[38;5;228m\]\w\[$(tput sgr0)\]\[\033[38;5;15m\]} (${name}) \\$ \[$(tput sgr0)\]"
           '';
@@ -172,7 +154,7 @@
       };
 
       packages = rec {
-        frontend_pkg = pkgs.frontend_pkg.frontend;
+        ht_eth_bin_pkg = pkgs.ht_eth_bin_pkg;
         default = pkgs.py_data_acq_pkg;
         py_dbc_proto_gen_pkg = pkgs.py_data_acq_pkg;
         proto_gen_pkg = pkgs.proto_gen_pkg;

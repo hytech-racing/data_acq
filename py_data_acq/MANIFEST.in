@@ -1,2 +1,3 @@
+include *.html
 include py_data_acq/*
-exclude pt_data_acq/test_stuff.py
+recursive-include py_data_acq *.html

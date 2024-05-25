@@ -36,7 +36,7 @@ def main():
             print("Message sent on {}".format(bus1.channel_info))
         except can.CanError:
             print("Message NOT sent!  Please verify can0 is working first")
-        time.sleep(0.1)
+        time.sleep(0.001)
 
 if __name__ == "__main__":
     main()

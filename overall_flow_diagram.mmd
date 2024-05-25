@@ -1,0 +1,52 @@
+flowchart LR
+    subgraph user_inputs[user defined inputs]
+        simulink
+        o_params
+        CAN_data
+        other_protos
+    end
+    subgraph user_interact[user interfaces]
+        fxglv_live
+        mcap
+        database
+        param_server
+        
+    end
+    subgraph user_code_interact[user embedded code interfaces]
+        MCU
+    end
+    subgraph CASE_lib_repo[CASE lib repo gen]
+        CASE_lib
+        params
+        outputs
+    end
+    subgraph HT_params[HT_params repo gen]
+        param_defaults
+        nanopb
+    end
+
+    simulink[CASE simulink model] --> CASE_lib
+    simulink --> params[CASE defined params.json]
+    simulink --> outputs[CASE_outputs.proto]
+    params --> param_protos[params.proto]
+    params --> param_defaults[config defaults header]
+    param_defaults --> MCU
+    o_params[other params.json] --> param_protos
+    outputs --> h_proto
+    param_protos --> param_server[parameter server]
+    
+    h_proto --> data_acq
+    data_acq --> fxglv_live[live foxglove]
+    data_acq --> mcap[output mcap files]
+    CAN_data[CAN message definitions] --> can_protos[CAN messages in hytech.proto]
+    can_protos --> h_proto
+    mcap --> database[mcap metadata defined database]
+    CASE_lib --> MCU
+    CAN_data --> dbc_h[dbc to C code gen hytech.h for CAN]
+    param_protos --> h_proto[hytech.proto]
+    dbc_h --> MCU
+    h_proto --> nanopb[protobuf msg defs ht_eth.pb.h]
+    nanopb --> MCU
+    other_protos[other msgs.proto]
+    other_protos --> h_proto
+    

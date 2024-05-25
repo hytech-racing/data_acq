@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumer Controller</title>
+</head>
+<body>
+    <h1>Consumer Controller</h1>
+    
+    <h2>Change Consume Mode</h2>
+    <form action="/change_mode" method="post">
+        <label for="mode">Mode:</label>
+        <select name="mode" id="mode">
+            <option value="normal">Normal</option>
+            <option value="reverse">Reverse</option>
+            <!-- Add more options as needed -->
+        </select>
+        <button type="submit">Change Mode</button>
+    </form>
+    
+    <h2>Send Command</h2>
+    <form action="/send_command" method="post">
+        <label for="cmd">Command:</label>
+        <input type="text" name="cmd" id="cmd" required>
+        <button type="submit">Send Command</button>
+    </form>
+</body>
+</html>
