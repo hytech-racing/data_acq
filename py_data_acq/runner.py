@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
 from py_data_acq.data_writers.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
-from py_data_acq.data_writers.foxglove_live import HTProtobufFoxgloveServer
+
 from py_data_acq.interfaces.interface_producer import InterfaceProducer
 from py_data_acq.interfaces.interface_consumer import InterfaceConsumer
 from py_data_acq.data_writers.data_writers import DataConsumer
@@ -83,7 +83,8 @@ def main():
     list_of_msg_names, msg_pb_classes = get_msg_names_and_classes()
 
     producer_manager = InterfaceProducer(db, msg_pb_classes, bus, recv_ip, recv_from_mcu_port)
-    consumer_queue = producer_manager.output_queue
+    foxglove_consumer_queue = producer_manager.foxglove_output_queue
+    mcap_consumer_queue = producer_manager.mcap_output_queue
     webapp_consumer_queue = producer_manager.config_output_queue
     webapp_mcap_writer_command_queue = queue.Queue()  # command queue to the mcap writer
     mcap_writer_feedback_queue = (
@@ -100,43 +101,36 @@ def main():
         path_to_mcap = "/home/nixos/recordings"
     # Start consumer in another thread
 
-    mcap_data_writer_consumer = HTPBMcapWriter(path_to_mcap, True, mcap_writer_feedback_queue)
-    # consumer = DataConsumer(
-    #     path_to_mcap,
-    #     True,
-    #     full_path_to_bin,
-    #     path_to_eth_bin,
-    #     webapp_mcap_writer_command_queue,
-    #     consumer_queue,
-    #     mcap_writer_feedback_queue,
-    # )
+    mcap_data_writer_consumer = HTPBMcapWriter(path_to_mcap, True, mcap_writer_feedback_queue, mcap_consumer_queue)
+    ht_foxglv_server = HTProtobufFoxgloveServer('0.0.0.0', 8765, 'test', full_path_to_bin, path_to_eth_bin, list_of_msg_names, foxglove_consumer_queue)
+
     web_app = WebApp(
         mcap_writer_feedback_queue,
         webapp_consumer_queue,
         webapp_mcap_writer_command_queue,
         webapp_output_queue,
         init_writing=True,
-        init_filename=consumer.get_current_mcap_writer_filename(),
+        init_filename="asdf",
         host="127.0.0.1",
         port=8888,
     )
-
+    
     output_consumer = InterfaceConsumer(webapp_output_queue, mcu_ip, send_to_mcu_port)
 
 
     msg_out_thread = threading.Thread(target=output_consumer.run)
     mcap_consumer_thread = threading.Thread(target=mcap_data_writer_consumer.run)
-    foxglove_consumer_thread = 
+    foxglove_consumer_thread = threading.Thread(target=ht_foxglv_server.run)
     web_app_thread = threading.Thread(target=web_app.start_server)
 
-    mcap_consumer_thread.start()
-    web_app_thread.start()
-    mcap_consumer_thread.start()
-    msg_out_thread.start()
+    foxglove_consumer_thread.start()
+    # mcap_consumer_thread.start()
+    # web_app_thread.start()
+    # msg_out_thread.start()
 
-    producer_manager.join()
-    mcap_consumer_thread.join()
-
+    # producer_manager.join()
+    # mcap_consumer_thread.join()
+    # foxglove_consumer_thread.join()
 
 if __name__ == "__main__":
     main()

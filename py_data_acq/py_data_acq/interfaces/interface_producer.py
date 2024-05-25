@@ -8,9 +8,10 @@ from hytech_eth_np_proto_py import ht_eth_pb2
 import socket
 
 class UDPInterface(threading.Thread):
-    def __init__(self, output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData], recv_ip: str, recv_port: int):
+    def __init__(self, fxglv_output_queue: queue.Queue[QueueData], mcap_output_queue: queue.Queue[QueueData], config_output_queue: queue.Queue[QueueData], recv_ip: str, recv_port: int):
         super().__init__()
-        self.output_queue = output_queue
+        self.fxglv_output_queue = fxglv_output_queue
+        self.mcap_output_queue = mcap_output_queue
         self.config_output_queue = config_output_queue
         self.recv_ip = recv_ip
         self.recv_port = recv_port
@@ -33,16 +34,18 @@ class UDPInterface(threading.Thread):
                     
                     if composite_msg.DESCRIPTOR.name == 'config':
                         self.config_output_queue.put(queue_data)
-                    self.output_queue.put(queue_data)
+                    self.fxglv_output_queue.put(queue_data)
+                    self.mcap_output_queue.put(queue_data)
         except Exception as e:
             print(e)
 
 class CANInterface(threading.Thread):
-    def __init__(self, can_msg_decoder: cantools.db.Database, message_classes, queue: queue.Queue[QueueData], can_bus):
+    def __init__(self, can_msg_decoder: cantools.db.Database, message_classes, mcap_queue: queue.Queue[QueueData], foxglv_queue: queue.Queue[QueueData], can_bus):
         super().__init__()
         self.can_msg_decoder = can_msg_decoder
         self.message_classes = message_classes
-        self.out_queue = queue
+        self.mcap_out_queue = mcap_queue
+        self.foxglv_out_queue = foxglv_queue
         self.can_bus = can_bus
 
     def run(self):
@@ -67,7 +70,8 @@ class CANInterface(threading.Thread):
                 )
                 
                 data = QueueData(msg.DESCRIPTOR.name, msg, DataInputType.CAN_DATA)
-                self.out_queue.put(data)
+                self.mcap_out_queue.put(data)
+                self.foxglv_out_queue.put(data)
                 
             except Exception as e:
                 print(e)
@@ -76,10 +80,11 @@ class CANInterface(threading.Thread):
 
 class InterfaceProducer:
     def __init__(self, can_msg_db: cantools.db.Database, message_classes, can_bus, recv_ip, recv_port):
-        self.output_queue = queue.Queue()
+        self.mcap_output_queue = queue.Queue()
+        self.foxglove_output_queue = queue.Queue()
         self.config_output_queue = queue.Queue()
-        self.can_interface_producer = CANInterface(can_msg_db, message_classes, self.output_queue, can_bus)
-        self.udp_interface_producer = UDPInterface(self.output_queue, self.config_output_queue, recv_ip, recv_port)
+        self.can_interface_producer = CANInterface(can_msg_db, message_classes, self.foxglove_output_queue, self.mcap_output_queue, can_bus)
+        self.udp_interface_producer = UDPInterface(self.foxglove_output_queue,self.mcap_output_queue, self.config_output_queue, recv_ip, recv_port)
 
     def start(self):
         self.can_interface_producer.start()
