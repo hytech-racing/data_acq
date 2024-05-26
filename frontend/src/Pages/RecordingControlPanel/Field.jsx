@@ -1,31 +1,26 @@
 import React from 'react';
-import {TextForm} from "./FieldComponents/TextForm";
+import {TextMetadataForm} from "./FieldComponents/TextMetadataForm";
 import {FieldTitle} from "./FieldComponents/FieldTitle";
-import {DropdownForm} from "./FieldComponents/DropdownForm";
-import {BooleanForm} from "./FieldComponents/BooleanForm";
-import {PidForm} from "./FieldComponents/PidForm";
+import {DropdownMetadataForm} from "./FieldComponents/DropdownMetadataForm";
+import {BooleanMetadataForm} from "./FieldComponents/BooleanMetadataForm";
 
-export function Field({fields, data, setData, index}) {
+export function Field({metadata, setMetadata, index}) {
     
     function getField() {
-        if (fields[index] === undefined) {
+        if (metadata.fields[index] === undefined) {
             return (<></>)
-        } else if (fields[index].automatic) {
-            return (<></>)
-        } else if (fields[index].type === "boolean") {
-            return (<BooleanForm data={data} setData={setData} index={index}/>)
-        } else if (fields[index].type === "pid") {
-            return (<PidForm data={data} setData={setData} index={index}/> )
-        } else if(fields[index].options.length > 0) {
-            return (<DropdownForm fields={fields} data={data} setData={setData} index={index}/>)
+        } else if (metadata.fields[index].type === "boolean") {
+            return (<BooleanMetadataForm metadata={metadata} setData={setMetadata} index={index}/>)
+        } else if(metadata.fields[index].options.length > 0) {
+            return (<DropdownMetadataForm metadata={metadata} setMetadata={setMetadata} index={index}/>)
         } else {
-            return (<TextForm data={data} setData={setData} index={index}/>)
+            return (<TextMetadataForm metadata={metadata} setMetadata={setMetadata} index={index}/>)
         }
     }
 
     return (
         <>
-            <FieldTitle fields={fields} index={index}/>
+            <FieldTitle metadata={metadata} index={index}/>
             {getField()}
         </>
     )

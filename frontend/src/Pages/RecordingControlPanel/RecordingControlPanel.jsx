@@ -8,36 +8,33 @@ import {NetworkingUtils} from "../../Util/NetworkingUtils";
 import {getDefaultData} from "../../Util/DataUtil";
 import {Field} from "./Field";
 
-export function RecordingControlPanel({recordingState, setRecordingState, useLocalhost, fields, setFields, data, setData}) {
+export function RecordingControlPanel({recordingState, setRecordingState, useLocalhost, metadata, setMetadata}) {
 
     const recordingsFiller = [{status: "started", filename: "file1.mcap"},
                                                        {status: "stopped", filename: "file1.mcap"}]
     const errorsFiller = ["Error 1", "Error 2"]
-    const metadataFiller = [{"name":"driver","displayName":"Driver","type":"string","automatic":false,"options":["Shayan","Ryan"]},{"name":"testingGoal","displayName":"Testing Goal","type":"string","automatic":false,"options":[]}]
+    const metadataFiller = [{"displayName":"Driver","name":"driver","options":[],"type":"string"},{"displayName":"Notes","name":"notes","options":[],"type":"string"},{"displayName":"Errors","name":"errors","options":[],"type":"string"}]
 
     async function update() {
         NetworkingUtils.getRequest(NetworkingUtils.getURL(['recordings'], useLocalhost), recordingsFiller).then(response => {
             if (Array.isArray(response) && response.length === 4) {
                 setRecordingState({
-                  currFile: response[0],
-                  recording: response[1],
-                  recordings: response[2],
-                  errors: response[3]
-                });
-                console.log('State updated:', {
                     currFile: response[0],
                     recording: response[1],
                     recordings: response[2],
-                    errors: response[3]})
+                    errors: response[3]
+                });
             }
         })
-        if (fields.length == 0){ //only run when page loads
+        if (metadata.needUpdate) {
             NetworkingUtils.getRequest(NetworkingUtils.getURL(['fields'], useLocalhost), metadataFiller).then(response => {
-                setFields(response)
-                setData(getDefaultData(response));
-            })  
+                setMetadata({
+                    needUpdate: false,
+                    fields: response,
+                    data: getDefaultData(response)
+                })
+            })
         }
-        
     }
 
     useEffect(() => {
@@ -51,11 +48,9 @@ export function RecordingControlPanel({recordingState, setRecordingState, useLoc
 
     return (
         <div className={"flex flex-col gap-4 items-center justify-center"}>
-            <div className={"flex flex-col gap-4 items-center justify-center"}>
-                        {fields.map((field, index) => <Field key={field.id} fields={fields} data={data}
-                                                             setData={setData} index={index} recording={recordingState.recording}
-                                                             serverAddr={'http://192.168.203.1'}/>)}
-            </div>
+
+            {metadata.fields.map((field, index) => <Field key={field.id} metadata={metadata} setMetadata={setMetadata} index={index}/>)}
+
             <StartStopButton recordingState={recordingState} setRecordingState={setRecordingState} useLocalhost={useLocalhost} update={update} fields={fields} data={data}/>
 
             <SectionTitle title={"Current Recording File"}/>

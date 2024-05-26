@@ -1,10 +1,11 @@
 import React from 'react';
+import {stringToType} from '../../../Util/DataUtil';
 
-export function BooleanForm({data, setData, index}) {
+export function BooleanMetadataForm({metadata, setMetadata, index}) {
     function handleChange(e) {
-        const newData = [...data]
-        newData[index] = e.target.value === "True"
-        setData(newData)
+        let newMetadata = metadata
+        newMetadata.data[index] = stringToType(e.target.value, 'boolean');
+        setMetadata(newMetadata)
     }
 
     return (

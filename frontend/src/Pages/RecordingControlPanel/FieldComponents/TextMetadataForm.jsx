@@ -1,11 +1,11 @@
 import React from "react";
 
-export function TextForm({data, setData, index}) {
+export function TextMetadataForm({metadata, setMetadata, index}) {
 
     function handleChange(e) {
-        const newData = [...data];
-        newData[index] = e.target.value;
-        setData(newData)
+        let newMetadata = metadata
+        newMetadata.data[index] = e.target.value
+        setMetadata(newMetadata)
     }
 
     return (

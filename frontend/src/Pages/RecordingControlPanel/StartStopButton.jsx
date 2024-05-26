@@ -5,7 +5,7 @@ import {getFormattedDate} from "../../Util/DateUtil";
 import {getMetadata} from "../../Util/DataUtil";
 import {wait} from "@testing-library/user-event/dist/utils";
 
-export function StartStopButton({recordingState, setRecordingState, useLocalhost, update, fields, data}) {
+export function StartStopButton({recordingState, useLocalhost, update, metadata}) {
 
     const [waitingForResponse, setWaitingForResponse] = useState(false);
     const [time, setTime] = useState("");
@@ -28,7 +28,7 @@ export function StartStopButton({recordingState, setRecordingState, useLocalhost
 
         setWaitingForResponse(true);
 
-        let body = getMetadata(fields, data, time)
+        let body = getMetadata(metadata.fields, metadata.data, time)
 
         const fetchResponse = await fetch(getURL('stop', useLocalhost), {
             method: 'POST',
@@ -85,13 +85,6 @@ export function StartStopButton({recordingState, setRecordingState, useLocalhost
             }
         }
     }
-
-    const updateRecording = (newRecordingState) => {
-        setRecordingState((prevState) => ({
-          ...prevState,
-          recording: newRecordingState
-        }));
-      };
 
     return (
         <div className="centered-container">
