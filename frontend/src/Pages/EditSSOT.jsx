@@ -1,12 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import {AddrToggle} from "./Header/AddrToggle";
-import {PageTitle} from "./Header/PageTitle";
 import {getURL} from "../Util/ServerAddrUtil";
 
-export function EditSSOT({ssot, setSsot, useLocalhost}) {
+export function EditSSOT({metadata, setMetadata, useLocalhost}) {
+
+    const metadataFiller = '[{"displayName":"Driver","name":"driver","options":[],"type":"string"},{"displayName":"Notes","name":"notes","options":[],"type":"string"},{"displayName":"Errors","name":"errors","options":[],"type":"string"}]'
+    const [text, setText] = useState('');
 
     useEffect(() => {
-        updateMetadata().then(metadata => setSsot(metadata))
+        updateMetadata().then(response => {
+            let newMetadata = metadata
+            newMetadata.needUpdate = true
+            newMetadata.fields = JSON.parse(response)
+            setMetadata(newMetadata)
+            setText(response)
+        })
     }, [useLocalhost])
 
     async function updateMetadata() {
@@ -22,8 +29,7 @@ export function EditSSOT({ssot, setSsot, useLocalhost}) {
             })
             json = await fetchResponse.text()
         } catch (e) {
-            //alert("WARNING: Using hardcoded fields")
-            json = '[{"name":"driver","displayName":"Driver","type":"string","automatic":false,"options":["Shayan","Ryan"]},{"name":"testingGoal","displayName":"Testing Goal","type":"string","automatic":false,"options":[]}]'
+            json = metadataFiller
         }
         return JSON.stringify(JSON.parse(json), null, 4)
     }
@@ -32,7 +38,7 @@ export function EditSSOT({ssot, setSsot, useLocalhost}) {
         try {
             const fetchResponse = await fetch(getURL('saveFields', useLocalhost), {
                 method: 'POST',
-                body: JSON.stringify(JSON.stringify(JSON.parse(ssot), null, 4)),
+                body: JSON.stringify(JSON.stringify(JSON.parse(text), null, 4)),
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json'
@@ -41,22 +47,34 @@ export function EditSSOT({ssot, setSsot, useLocalhost}) {
         } catch (e) {
             alert(e)
         }
-        
-        updateMetadata().then(metadata => setSsot(metadata))
+
+        updateMetadata().then(response => {
+            let newMetadata = metadata
+            newMetadata.needUpdate = true
+            newMetadata.fields = JSON.parse(response)
+            setMetadata(newMetadata)
+            setText(response)
+        })
     }
 
     return (
         <>
             <main>
                 <div className={"flex flex-col gap-4 items-center justify-center pt-6"}>
-                    <textarea className={"textarea textarea-bordered w-80 h-[60dvh] resize-none"} value={ssot}
-                              onChange={e => setSsot(e.target.value)} wrap={'off'}></textarea>
+                    <textarea className={"textarea textarea-bordered w-80 h-[60dvh] resize-none"} value={text}
+                              onChange={e => setText(e.target.value)} wrap={'off'}></textarea>
                 </div>
             </main>
             <footer className={"sticky bottom-0 bg-base-100"}>
                 <div className={"flex flex-row gap-2 pt-4"}>
                     <div className={"grow w-max"}/>
-                    <button className={"btn"} onClick={() => updateMetadata().then(metadata => setSsot(metadata))}>
+                    <button className={"btn"} onClick={() => updateMetadata().then(response => {
+                        let newMetadata = metadata
+                        newMetadata.needUpdate = true
+                        newMetadata.fields = JSON.parse(response)
+                        setMetadata(newMetadata)
+                        setText(response)
+                    })}>
                         Reset
                     </button>
                     <button className={"btn btn-success"} onClick={saveMetadata}>

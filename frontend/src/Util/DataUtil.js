@@ -1,6 +1,7 @@
 import {getFormattedDate} from "./DateUtil";
 
 export function getDefaultData(fields) {
+    console.log(fields)
     let data = []
     for (let i = 0; i < fields.length; i++) {
         data.push(getDefaultValue(fields[i].type))
@@ -13,8 +14,19 @@ function getDefaultValue(type) {
         return ''
     } else if (type === 'boolean') {
         return false
-    } else if (type === 'pid') {
-        return {p: '', i: '', d: ''}
+    } else if (type === 'number') {
+        return 0.0
+    }
+    return null
+}
+
+export function stringToType(s, type) {
+    if (type === 'string') {
+        return s
+    } else if (type === 'boolean') {
+        return s === 'True' || s === 'true' || s === 'On' || s === 'on'
+    } else if (type === 'number') {
+        return parseFloat(s)
     }
     return null
 }
