@@ -1,8 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
-import {MCAPRecorder} from "./Pages/MCAPRecorder";
 import {EditSSOT} from "./Pages/EditSSOT";
-import {Files} from "./Pages/Files"
 import {Header} from "./Pages/Header/Header"
 import {RecordingControlPanel} from "./Pages/RecordingControlPanel/RecordingControlPanel";
 import {ParamsControlPanel} from "./Pages/ParamsControlPanel/ParamsControlPanel";
@@ -13,7 +11,6 @@ function App() {
     const [currPanel, setCurrPanel] = useState("Recording")
 
     const [recordingState, setRecordingState] = useState({currFile: null, recording: false, recordings: [], errors: []})
-    const [ssot, setSsot] = useState('')
     const [params, setParams] = useState({})
 
     const [metadata, setMetadata] = useState({needUpdate: false, fields: [], data: []})
@@ -25,7 +22,7 @@ function App() {
             )
         } else if (currPanel === "Edit SSOT"){
             return (
-                <EditSSOT ssot={ssot} setSsot={setSsot} useLocalhost={useLocalhost}/>
+                <EditSSOT metadata={metadata} setMetadata={setMetadata} useLocalhost={useLocalhost}/>
             )
         } else if (currPanel === "Params") {
             return (

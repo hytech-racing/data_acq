@@ -38,20 +38,18 @@ export function RecordingControlPanel({recordingState, setRecordingState, useLoc
     }
 
     useEffect(() => {
+        let newMetadata = metadata
+        newMetadata.needUpdate = true
+        setMetadata(newMetadata)
         update().then()
-        // or run when toggle is switched
-        NetworkingUtils.getRequest(NetworkingUtils.getURL(['fields'], useLocalhost), metadataFiller).then(response => {
-            setFields(response)
-            setData(getDefaultData(response));
-        })  
     }, [useLocalhost])
 
     return (
         <div className={"flex flex-col gap-4 items-center justify-center"}>
 
-            {metadata.fields.map((field, index) => <Field key={field.id} metadata={metadata} setMetadata={setMetadata} index={index}/>)}
+            {metadata.fields.map((field, index) => <Field key={index} metadata={metadata} setMetadata={setMetadata} index={index}/>)}
 
-            <StartStopButton recordingState={recordingState} setRecordingState={setRecordingState} useLocalhost={useLocalhost} update={update} fields={fields} data={data}/>
+            <StartStopButton recordingState={recordingState} setRecordingState={setRecordingState} useLocalhost={useLocalhost} update={update} metadata={metadata}/>
 
             <SectionTitle title={"Current Recording File"}/>
 

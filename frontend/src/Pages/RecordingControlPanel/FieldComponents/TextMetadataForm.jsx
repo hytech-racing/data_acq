@@ -9,6 +9,6 @@ export function TextMetadataForm({metadata, setMetadata, index}) {
     }
 
     return (
-        <input value={data[index]} onChange={handleChange} className={"input input-bordered w-80"} disabled={false}/>
+        <input value={metadata.data[index]} onChange={handleChange} className={"input input-bordered w-80"} disabled={false}/>
     )
 }
