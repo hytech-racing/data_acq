@@ -31,7 +31,7 @@ export function ParamsControlPanel({params, setParams, useLocalhost}) {
     return (
         <div className={"flex flex-col gap-4 items-center justify-center"}>
             {getFields()}
-            <SendParamsButton params={params} useLocalhost={useLocalhost} update={updateParams}/>
+            <SendParamsButton params={params} useLocalhost={useLocalhost} updateParams={updateParams}/>
         </div>
     )
 }
