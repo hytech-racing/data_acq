@@ -44,14 +44,6 @@ class HTPBMcapWriter:
         self.close_writer()
  
     async def close_writer(self):
-        if self.video_task:
-                self.video_task.cancel()  # Cancel the video recording task
-                try:
-                    await self.video_task  # Ensure the task is fully closed
-                except asyncio.CancelledError:
-                    pass
-        if self.video_capture:
-            self.video_capture.release()  # Release the webcam
         if self.is_writing:
             self.is_writing = False
             self.mcap_writer_class.finish()
@@ -67,29 +59,8 @@ class HTPBMcapWriter:
         self.writing_file = open(self.actual_path, "wb")
         self.mcap_writer_class = Writer(self.writing_file)
         self.is_writing = True
-        self.video_capture = cv2.VideoCapture(0)
-        self.video_task = asyncio.create_task(self.record_video())
-
  
-    async def record_video(self):
-        while self.is_writing:
-            ret, frame = self.video_capture.read()
-            if not ret:
-                break
-            compressed_image = self.compress_frame_to_protobuf(frame)
-            timestamp = int(time.time() * 1e9)  # Nanoseconds
-            self.writer.write_message(
-                topic=compressed_image.DESCRIPTOR.name + "_data",
-                message=compressed_image,
-                log_time=timestamp,
-                publish_time=timestamp
-            )
-            self.writing_file.flush()
-            cv2.imshow("Video", frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-        cv2.destroyAllWindows()
-        
+   
  
     async def write_msg(self, msg):
         if self.is_writing:
@@ -105,13 +76,4 @@ class HTPBMcapWriter:
         msg = await queue.get()
         if msg is not None:
             await self.write_msg(msg.pb_msg)
- 
-    def compress_frame_to_protobuf(self, frame):
-        ret, compressed_frame = cv2.imencode(".jpg", frame)
-        if not ret:
-            raise ValueError("Failed to compress frame")
-        compressed_image = CompressedImage()
-        compressed_image.format = "jpeg"
-        compressed_image.data = compressed_frame.tobytes()
-        return compressed_image
  

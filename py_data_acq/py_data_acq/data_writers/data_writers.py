@@ -3,6 +3,7 @@ import time
 from mcap_protobuf.writer import Writer
 from datetime import datetime
 from typing import Any, Optional, Set
+
 import os
 import queue
 import asyncio
@@ -11,6 +12,10 @@ from py_data_acq.data_writers.foxglove_live.foxglove_ws import HTProtobufFoxglov
 from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
 from py_data_acq.common.common_types import QueueData, MCAPServerStatusQueueData
 from py_data_acq.common.protobuf_helpers import get_msg_names_and_classes
+
+from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
+import cv2
+
 
 
 class DataConsumer(threading.Thread):
@@ -38,6 +43,7 @@ class DataConsumer(threading.Thread):
             init_mcap_writer_writing,
             status_output_queue=mcap_writer_feedback_queue
         )
+        self.video_capture = cv2.VideoCapture(0)
 
         # Create two asyncio queues
         self.mcap_msg_queue_copy = asyncio.Queue()
@@ -65,6 +71,28 @@ class DataConsumer(threading.Thread):
             await self.foxglove_msg_queue_copy.put(item)
             self.web_app_queue.task_done()
 
+    async def copy_webcam(self):
+        loop = asyncio.get_running_loop()
+        while True:
+            ret, frame = self.video_capture.read()
+            if not ret:
+                break
+            compressed_image = self.compress_frame_to_protobuf(frame)
+            item = QueueData("CompressedImage", compressed_image, CompressedImage)
+            
+            await self.mcap_msg_queue_copy.put(item)
+            await self.foxglove_msg_queue_copy.put(item)
+            self.web_app_queue.task_done()
+
+    def compress_frame_to_protobuf(self, frame):
+        ret, compressed_frame = cv2.imencode(".jpg", frame)
+        if not ret:
+            raise ValueError("Failed to compress frame")
+        compressed_image = CompressedImage()
+        compressed_image.format = "jpeg"
+        compressed_image.data = compressed_frame.tobytes()
+        return compressed_image
+
     async def run_consumer_tasks(self):
         fx_s = HTProtobufFoxgloveServer(
             "0.0.0.0",
@@ -86,5 +114,7 @@ class DataConsumer(threading.Thread):
         # Start copying data to asyncio queues and consuming tasks
         asyncio.ensure_future(self.copy_pb_msg_queue_to_asyncio_queue())
         asyncio.ensure_future(self.copy_web_app_queue_asyncio_queue())
+        asyncio.ensure_future(self.copy_webcam())
         loop.run_until_complete(self.run_consumer_tasks())
         loop.close()
+        
