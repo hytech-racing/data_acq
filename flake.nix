@@ -52,9 +52,7 @@
       proto_gen_overlay = final: prev: {
         proto_gen_pkg = final.callPackage ./dbc_proto_bin_gen.nix { };
       };
-      py_foxglove_protobuf_schemas_overlay = final: prev: {
-        py_foxglove_protobuf_schemas = final.callPackage ./py_foxglove_protobuf_schemas.nix { };
-      };
+     
       nix_protos_overlays = nix-proto.generateOverlays'
         {
           hytech_np = { proto_gen_pkg }:
