@@ -6,6 +6,7 @@
 , asyncudp_pkg
 , proto_gen_pkg
 , hytech_eth_np_proto_py
+, py_foxglove_protobuf_schemas_pkg
 , hytech_np_proto_py
 }:
 
@@ -23,6 +24,11 @@ python311Packages.buildPythonApplication {
     python311Packages.lz4
     python311Packages.zstandard
     py_foxglove_websocket_pkg
+
+    py_foxglove_protobuf_schemas_pkg
+    python311Packages.opencv4
+
+    
     python311Packages.protobuf
     mcap_support_pkg
     py_mcap_pkg
