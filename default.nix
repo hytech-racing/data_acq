@@ -25,7 +25,6 @@ python311Packages.buildPythonApplication {
     python311Packages.zstandard
     py_foxglove_websocket_pkg
 
-    python311Packages.vidstab
     py_foxglove_proto_schemas_pkg
 
 

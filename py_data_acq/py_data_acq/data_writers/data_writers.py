@@ -12,7 +12,7 @@ from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
 from py_data_acq.common.common_types import QueueData, MCAPServerStatusQueueData
 from py_data_acq.common.protobuf_helpers import get_msg_names_and_classes
 
-import cv2
+
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 
 class DataConsumer(threading.Thread):
