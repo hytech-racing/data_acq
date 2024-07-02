@@ -97,7 +97,7 @@ class HTPBMcapWriter:
             self.writing_file.flush()
  
     async def write_data(self, queue):
-        
+        await self.write_video_msg()
         msg = await queue.get()
         if msg is not None:
             await self.write_msg(msg.pb_msg)
