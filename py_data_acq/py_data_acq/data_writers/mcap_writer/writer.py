@@ -65,7 +65,7 @@ class HTPBMcapWriter:
  
    
      async def write_video_msg(self):
-        while True:
+         while True:
             ret, frame = self.video_capture.read()
             if not ret:
                 break
