@@ -10,7 +10,7 @@ import asyncio
 
 from py_data_acq.data_writers.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
 from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
-from py_data_acq.common.common_types import QueueData, MCAPServerStatusQueueData
+from py_data_acq.common.common_types import QueueData, MCAPServerStatusQueueData, DataInputType
 from py_data_acq.common.protobuf_helpers import get_msg_names_and_classes
 
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
@@ -77,7 +77,7 @@ class DataConsumer(threading.Thread):
             if not ret:
                 break
             compressed_image = self.compress_frame_to_protobuf(frame)
-            item = QueueData("CompressedImage", compressed_image, CompressedImage)
+            item = QueueData("CompressedImage", compressed_image, DataInputType.ETHERNET_DATA)
             await self.mcap_msg_queue_copy.put(item)
             await self.foxglove_msg_queue_copy.put(item)
 
