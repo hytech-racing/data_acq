@@ -72,17 +72,14 @@ class DataConsumer(threading.Thread):
             self.web_app_queue.task_done()
 
     async def copy_webcam(self):
-        loop = asyncio.get_running_loop()
         while True:
             ret, frame = self.video_capture.read()
             if not ret:
                 break
             compressed_image = self.compress_frame_to_protobuf(frame)
             item = QueueData("CompressedImage", compressed_image, CompressedImage)
-            
             await self.mcap_msg_queue_copy.put(item)
             await self.foxglove_msg_queue_copy.put(item)
-            self.web_app_queue.task_done()
 
     def compress_frame_to_protobuf(self, frame):
         ret, compressed_frame = cv2.imencode(".jpg", frame)
