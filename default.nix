@@ -8,6 +8,7 @@
 , hytech_eth_np_proto_py
 , hytech_np_proto_py
 , py_foxglove_proto_schemas_pkg
+, aero_sensor_protos_np_proto_py
 }:
 
 python311Packages.buildPythonApplication {
@@ -26,6 +27,10 @@ python311Packages.buildPythonApplication {
     py_foxglove_websocket_pkg
 
     py_foxglove_proto_schemas_pkg
+    aero_sensor_protos_np_proto_py
+    pyserial
+    pyserial-asyncio
+    aiohttp
     python311Packages.opencv4
 
 
@@ -38,6 +43,7 @@ python311Packages.buildPythonApplication {
     python311Packages.flask-cors
     python311Packages.hypercorn
     python311Packages.quart
+
 
     python311Packages.asgiref # required for flask async 
     hytech_eth_np_proto_py
