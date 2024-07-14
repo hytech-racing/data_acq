@@ -26,9 +26,9 @@ python311Packages.buildPythonApplication {
     py_foxglove_websocket_pkg
 
     py_foxglove_proto_schemas_pkg
-    pyserial
-    pyserial-asyncio
-    aiohttp
+    python311Packages.pyserial
+    python311Packages.pyserial-asyncio
+    python311Packages.aiohttp
     python311Packages.opencv4
 
 
