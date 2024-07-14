@@ -8,6 +8,7 @@
 , hytech_eth_np_proto_py
 , hytech_np_proto_py
 , py_foxglove_proto_schemas_pkg
+, aero_sensor_protos_np_proto_py
 }:
 
 python311Packages.buildPythonApplication {
@@ -29,6 +30,7 @@ python311Packages.buildPythonApplication {
     python311Packages.pyserial
     python311Packages.pyserial-asyncio
     python311Packages.aiohttp
+    aero_sensor_protos_np_proto_py
     python311Packages.opencv4
 
 
