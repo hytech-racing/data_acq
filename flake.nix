@@ -23,6 +23,7 @@
     , utils
     , mcap-protobuf
     , mcap
+    , aero
     , foxglove-websocket
     , asyncudp
     , nix-proto
