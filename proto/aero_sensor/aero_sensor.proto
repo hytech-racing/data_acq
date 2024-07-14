@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package aero_sensor;
+
+message aero_data
+{
+    repeated float readings_pa = 2;
+}

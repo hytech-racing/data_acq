@@ -57,6 +57,15 @@
       };
       nix_protos_overlays = nix-proto.generateOverlays'
         {
+          aero_sensor_protos_np =
+          nix-proto.mkProtoDerivation {
+            name = "aero_sensor_protos_np";
+            src = nix-proto.lib.srcFromNamespace {
+              root = ./proto;
+              namespace = "aero_sensor";
+            };
+            version = "1.0.0";
+          };
           hytech_np = { proto_gen_pkg }:
             nix-proto.mkProtoDerivation {
               name = "hytech_np";
@@ -154,6 +163,7 @@
       };
 
       packages = rec {
+        aero_sensor_protos_np = pkgs.aero_sensor_protos_np;
         ht_eth_bin_pkg = pkgs.ht_eth_bin_pkg;
         default = pkgs.py_data_acq_pkg;
         py_dbc_proto_gen_pkg = pkgs.py_data_acq_pkg;
