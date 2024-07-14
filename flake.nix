@@ -9,6 +9,7 @@
     mcap-protobuf.url = "github:RCMast3r/mcap-protobuf-support-flake";
     flake-utils.url = "github:numtide/flake-utils";
     mcap.url = "github:RCMast3r/py_mcap_nix";
+    aero.url = "github:hytech-racing/aero_sensor_logger";
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
     ht_can_pkg_flake.url = "github:hytech-racing/ht_can/97";
@@ -86,6 +87,7 @@
         mcap.overlays.default
         asyncudp.overlays.default
         foxglove-websocket.overlays.default
+        aero.overlays.default
       ] ++ nix-proto.lib.overlayToList nix_protos_overlays;
       pkgs = import nixpkgs {
         overlays = my_overlays;
