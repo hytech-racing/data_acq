@@ -132,7 +132,7 @@ async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
 
     async def capture_video():
-        cap = cv2.VideoCapture(1)
+        cap = cv2.VideoCapture(0)
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -257,6 +257,7 @@ async def run(logger):
     db = cantools.db.load_file(full_path_to_dbc)
 
     list_of_msg_names, msg_pb_classes = pb_helpers.get_msg_names_and_classes()
+    list_of_msg_names.append("foxglove.CompressedImage")
     fx_s = HTProtobufFoxgloveServer(
         "0.0.0.0", 8765, "hytech-foxglove", full_path, list_of_msg_names
     )
