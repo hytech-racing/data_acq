@@ -18,6 +18,13 @@ import can
 from can.interfaces.udp_multicast import UdpMulticastBus
 import cantools
 import logging
+#aero
+import struct
+import serial
+import serial_asyncio
+
+from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
+
 
 # TODO we may want to have a config file handling to set params such as:
 #      - foxglove server port
