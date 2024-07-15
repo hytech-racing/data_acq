@@ -129,16 +129,21 @@ async def continuous_aero_receiver(queue, q2):
 
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
-    cap = cv2.VideoCapture(0)
-    
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        
-        compressed_image = await compress_frame_to_protobuf(frame)
-        await queue.put(compressed_image)
-        await q2.put(compressed_image)
+    loop = asyncio.get_event_loop()
+
+    async def capture_video():
+        cap = cv2.VideoCapture(0)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            compressed_image = await compress_frame_to_protobuf(frame)
+            await queue.put(compressed_image)
+            await q2.put(compressed_image)
+            await asyncio.sleep(0)  # Yield control to the event loop
+
+    await loop.run_in_executor(None, capture_video)
 
 
 async def continuous_can_receiver(
