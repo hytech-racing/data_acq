@@ -24,6 +24,8 @@ import serial
 import serial_asyncio
 
 from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
+from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
+import cv2
 
 
 # TODO we may want to have a config file handling to set params such as:
@@ -44,6 +46,96 @@ def find_can_interface():
         if interface.startswith("can"):
             return interface
     return None
+
+#deserializing frames
+def compress_frame_to_protobuf(frame):
+        ret, compressed_frame = cv2.imencode(".jpg", frame)
+        if not ret:
+            raise ValueError("Failed to compress frame")
+        compressed_image = CompressedImage()
+        compressed_image.format = "jpeg"
+        compressed_image.data = compressed_frame.tobytes()
+        return compressed_image
+
+#add aero data to q
+async def append_sensor_data(queue, q2, data, port_name):
+    msg = aero_sensor_pb2.aero_data()
+    msg.readings_pa.extend(data)
+    sensor_name = port_name.split("/")[-1]
+    msg.DESCRIPTOR.name = msg.DESCRIPTOR.name + "_" + sensor_name
+    await queue.put(msg)
+    await q2.put(msg)
+
+#Listener class
+class Listener(asyncio.Protocol):
+    def connection_made(self, transport):
+        self.transport = transport
+        self.logging_enabled = True
+        self.transport.write(b"@")
+        print(f"Successfully wrote '@'")
+        self.transport.write(b"D")
+        print(f"Successfully wrote 'D'")
+
+        print("Connection made")
+        
+    def data_received(self, data):
+        # print(data)
+        self.buffer += data
+        if b"#" in self.buffer:
+            parts = self.buffer.split(b"#", 1)
+            before_hash = parts[0]
+            after_hash = parts[1]
+
+            if len(after_hash) >= 46:
+                floats = process_buffer(after_hash[:32])
+                if self.logging_enabled:
+                    asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
+                    
+                    # log_sensor_data(self.queue, floats, self.port_name)
+                    # print(floats)
+                self.buffer = after_hash[46:]
+            else:
+                self.buffer = b"#" + after_hash
+    def connection_lost(self, exc):
+        print("Connection lost")
+
+    def setup_listener(self, queue, q2, port_name):
+        self.buffer = b""
+        self.queue = queue
+        self.q2 = q2
+        self.port_name = port_name
+
+    def enable_queue(self):
+        self.logging_enabled = True
+
+    def disable_queue(self):
+        self.logging_enabled = False
+
+#Aero sensor listener
+async def continuous_aero_receiver(queue, q2):
+    loop = asyncio.get_event_loop()
+    ports = ['/dev/ttyACM0', '/dev/ttyACM1']
+    coro1 = serial_asyncio.create_serial_connection(loop, Listener, ports[0], baudrate=500000)
+    coro2 = serial_asyncio.create_serial_connection(loop, Listener, ports[1], baudrate=500000)
+    transport1, listener = await coro1
+    transport2, listener2 = await coro2
+    listener.setup_listener(queue, q2, ports[0])
+    listener2.setup_listener(queue, q2, ports[1])
+
+
+#Webcam listener
+async def continuous_video_receiver(queue, q2):
+    loop = asyncio.get_event_loop()
+    webcam = cv2.VideoCapture(0)
+    while True:
+        ret, frame = webcam.read()
+        if not ret:
+            break
+        compressed_image = compress_frame_to_protobuf(frame)
+        compressed_image = QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
+        await queue.put(compressed_image)
+        await q2.put(compressed_image)
+        #await asyncio.sleep(0)
 
 
 async def continuous_can_receiver(
@@ -175,6 +267,11 @@ async def run(logger):
     receiver_task = asyncio.create_task(
         continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
     )
+
+    #testing these two tasks
+    aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
+    video_receiver_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
+
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
     srv_task = asyncio.create_task(mcap_web_server.start_server())
@@ -183,7 +280,8 @@ async def run(logger):
     # the encoded message for the message id. I will need to handle the same association of message id
     # and schema in the foxglove websocket server.
 
-    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
+#edited tasks
+    await asyncio.gather(receiver_task, aero_receiver_task, video_receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
