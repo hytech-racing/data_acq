@@ -266,7 +266,7 @@ async def run(logger):
     )
     receiver_task = asyncio.create_task(
         continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus),
-        continuous_aero_receiver(queue, queue2),
+        # continuous_aero_receiver(queue, queue2),
         continuous_video_receiver(queue, queue2)
     )
 
