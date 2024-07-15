@@ -132,7 +132,7 @@ async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
 
     async def capture_video():
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(1)
         while True:
             ret, frame = cap.read()
             if not ret:
