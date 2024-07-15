@@ -63,8 +63,10 @@ async def append_sensor_data(queue, q2, data, port_name):
     msg.readings_pa.extend(data)
     sensor_name = port_name.split("/")[-1]
     msg.DESCRIPTOR.name = msg.DESCRIPTOR.name + "_" + sensor_name
+    msg = QueueData(msg.DESCRIPTOR.name, msg)
     await queue.put(msg)
     await q2.put(msg)
+    asyncio.sleep(0)
 
 #Listener class
 class Listener(asyncio.Protocol):
@@ -135,6 +137,7 @@ async def continuous_video_receiver(queue, q2):
         compressed_image = QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
         await queue.put(compressed_image)
         await q2.put(compressed_image)
+        asyncio.sleep(0)
 
 
 async def continuous_can_receiver(
@@ -164,6 +167,7 @@ async def continuous_can_receiver(
             data = QueueData(msg.DESCRIPTOR.name, msg)
             await queue.put(data)
             await q2.put(data)
+            asyncio.sleep(0)
 
 
         except Exception as e:
@@ -266,14 +270,12 @@ async def run(logger):
         init_filename=mcap_writer.actual_path
     )
     receiver_task = asyncio.create_task(
-            continuous_video_receiver(queue, queue2),
             continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
-            # continuous_aero_receiver(queue, queue2),
     )
 
     #testing these two tasks
-    #aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
-    #video_receiver_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
+    aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
+    video_receiver_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
 
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
@@ -284,7 +286,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(video_receiver_task, receiver_task, aero_receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
