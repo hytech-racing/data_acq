@@ -135,7 +135,6 @@ async def continuous_video_receiver(queue, q2):
         compressed_image = QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
         await queue.put(compressed_image)
         await q2.put(compressed_image)
-        await asyncio.sleep(0)
 
 
 async def continuous_can_receiver(
@@ -165,7 +164,6 @@ async def continuous_can_receiver(
             data = QueueData(msg.DESCRIPTOR.name, msg)
             await queue.put(data)
             await q2.put(data)
-            await asyncio.sleep(0)
 
 
         except Exception as e:
@@ -269,9 +267,10 @@ async def run(logger):
     )
     receiver_task = asyncio.create_task(
         asyncio.gather(
-            continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus),
+            continuous_video_receiver(queue, queue2),
+            continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
             # continuous_aero_receiver(queue, queue2),
-            continuous_video_receiver(queue, queue2)
+            
         )
     )
 
