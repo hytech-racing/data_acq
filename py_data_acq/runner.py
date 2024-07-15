@@ -1,19 +1,34 @@
 #!/usr/bin/env python
-from py_data_acq.data_writers.mcap_writer.writer import HTPBMcapWriter
-from py_data_acq.data_writers.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
+import asyncio
 
-from py_data_acq.interfaces.interface_producer import InterfaceProducer
-from py_data_acq.interfaces.interface_consumer import InterfaceConsumer
-from py_data_acq.data_writers.data_writers import DataConsumer
-from py_data_acq.common.protobuf_helpers import get_msg_names_and_classes
-from py_data_acq.web_server.web_app_v2 import WebApp
+from py_data_acq.foxglove_live.foxglove_ws import HTProtobufFoxgloveServer
+from py_data_acq.mcap_writer.writer import HTPBMcapWriter
+from py_data_acq.common.common_types import QueueData
+import py_data_acq.common.protobuf_helpers as pb_helpers
+from py_data_acq.common.common_types import (
+    MCAPServerStatusQueueData,
+    MCAPFileWriterCommand,
+)
+from py_data_acq.web_server.mcap_server import MCAPServer
+from hytech_np_proto_py import hytech_pb2
+import concurrent.futures
 import sys
 import os
 import can
 from can.interfaces.udp_multicast import UdpMulticastBus
 import cantools
-import threading
-import queue
+import logging
+
+# TODO we may want to have a config file handling to set params such as:
+#      - foxglove server port
+#      - foxglove server ip
+#      - config to inform io handler (say for different CAN baudrates)
+
+can_methods = {
+    "debug": [UdpMulticastBus.DEFAULT_GROUP_IPv4, "udp_multicast"],
+    "local_can_usb_KV": [0, "kvaser"],
+    "local_debug": ["vcan0", "socketcan"],
+}
 
 
 def find_can_interface():
@@ -24,40 +39,80 @@ def find_can_interface():
     return None
 
 
-def main():
+async def continuous_can_receiver(
+    can_msg_decoder: cantools.db.Database, message_classes, queue, q2, can_bus
+):
+    loop = asyncio.get_event_loop()
+    reader = can.AsyncBufferedReader()
+    notifier = can.Notifier(can_bus, [reader], loop=loop)
+
+    while True:
+        # Wait for the next message from the buffer
+        msg = await reader.get_message()
+
+        # print("got msg")
+        id = msg.arbitration_id
+        try:
+            decoded_msg = can_msg_decoder.decode_message(
+                msg.arbitration_id, msg.data, decode_containers=True
+            )
+            # print("decoded msg")
+            msg = can_msg_decoder.get_message_by_frame_id(msg.arbitration_id)
+            # print("got msg by id")
+            msg = pb_helpers.pack_protobuf_msg(
+                decoded_msg, msg.name.lower(), message_classes
+            )
+            # print("created pb msg successfully")
+            data = QueueData(msg.DESCRIPTOR.name, msg)
+            await queue.put(data)
+            await q2.put(data)
+        except Exception as e:
+            # print(id)
+            # print(e)
+            pass
+
+    # Don't forget to stop the notifier to clean up resources.
+    notifier.stop()
+
+
+async def write_data_to_mcap(
+    writer_cmd_queue: asyncio.Queue,
+    writer_status_queue: asyncio.Queue,
+    data_queue: asyncio.Queue,
+    mcap_writer: HTPBMcapWriter,
+    write_on_init: bool,
+):
+    writing = write_on_init
+    async with mcap_writer as mcw:
+        while True:
+            response_needed = False
+            if not writer_cmd_queue.empty():
+                cmd_msg = writer_cmd_queue.get_nowait()
+                writing = cmd_msg.writing
+                response_needed = True
+
+            if writing:
+                if response_needed:
+                    await mcw.open_new_writer()
+                    await writer_status_queue.put(MCAPServerStatusQueueData(True, mcw.actual_path))
+                await mcw.write_data(data_queue)
+            else:
+                if response_needed:
+                    await writer_status_queue.put(MCAPServerStatusQueueData(False, mcw.actual_path))
+                    await mcw.close_writer()
+                # still keep getting the msgs from queue so it doesnt fill up
+                trash_msg = await data_queue.get()
+
+
+async def fxglv_websocket_consume_data(queue, foxglove_server):
+    async with foxglove_server as fz:
+        while True:
+            await fz.send_msgs_from_queue(queue)
+
+
+async def run(logger):
     # for example, we will have CAN as our only input as of right now but we may need to add in
     # a sensor that inputs over UART or ethernet
-    path_to_bin = ""
-    path_to_dbc = ""
-    mcu_ip = "192.168.1.30"
-    recv_ip = "192.168.1.69"
-    send_to_mcu_port = 20000
-    recv_from_mcu_port = 20001
-    print(len(sys.argv))
-    if len(sys.argv) == 8:
-        path_to_bin = sys.argv[1]
-        path_to_dbc = sys.argv[2]
-        path_to_eth_bin = sys.argv[3]
-        mcu_ip = sys.argv[4]
-        send_to_mcu_port = int(sys.argv[5])
-        recv_from_mcu_port = int(sys.argv[6])
-        recv_ip = sys.argv[7]
-
-    elif len(sys.argv) == 1:
-        print("no args set, defaulting to environment variable sets for dev usage")
-        path_to_bin = os.environ.get("BIN_PATH")
-        path_to_dbc = os.environ.get("DBC_PATH")
-        path_to_eth_bin = os.environ.get("HT_ETH_BIN_PATH")
-        recv_ip = "127.0.0.1"
-        mcu_ip = "127.0.0.1"
-        send_to_mcu_port = 20000
-        recv_from_mcu_port = 20001
-    else:
-        print("error, need to use proper args")
-        print("runner.py [path_to_bin] [path_to_dbc] [path_to_eth_bin] [mcu_ip] [send_to_mcu_port [recv_from_mcu_port] [recv_ip]")
-        return
-
-
     can_interface = find_can_interface()
 
     if can_interface:
@@ -75,62 +130,56 @@ def main():
             channel=UdpMulticastBus.DEFAULT_GROUP_IPv6, interface="udp_multicast"
         )
 
-    full_path_to_bin = os.path.join(path_to_bin, "hytech.bin")
-    path_to_eth_bin = os.path.join(path_to_eth_bin, "ht_eth.bin")
+    queue = asyncio.Queue()
+    queue2 = asyncio.Queue()
+    path_to_bin = ""
+    path_to_dbc = ""
+
+    if len(sys.argv) > 2:
+        path_to_bin = sys.argv[1]
+        path_to_dbc = sys.argv[2]
+    else:
+        path_to_bin = os.environ.get("BIN_PATH")
+        path_to_dbc = os.environ.get("DBC_PATH")
+
+    full_path = os.path.join(path_to_bin, "hytech.bin")
     full_path_to_dbc = os.path.join(path_to_dbc, "hytech.dbc")
     db = cantools.db.load_file(full_path_to_dbc)
 
-    list_of_msg_names, msg_pb_classes = get_msg_names_and_classes()
-
-    producer_manager = InterfaceProducer(db, msg_pb_classes, bus, recv_ip, recv_from_mcu_port)
-    foxglove_consumer_queue = producer_manager.foxglove_output_queue
-    mcap_consumer_queue = producer_manager.mcap_output_queue
-    webapp_consumer_queue = producer_manager.config_output_queue
-    webapp_mcap_writer_command_queue = queue.Queue()  # command queue to the mcap writer
-    mcap_writer_feedback_queue = (
-        queue.Queue()
-    )  # feedback queue from the mcap writer about status / file names
-    webapp_output_queue = (
-        queue.Queue()
-    )  # webapp message queue for outputting commands directly over the UDP consumer interface (config updates at first)
-    # Start producer manager
-    producer_manager.start()
+    list_of_msg_names, msg_pb_classes = pb_helpers.get_msg_names_and_classes()
+    fx_s = HTProtobufFoxgloveServer(
+        "0.0.0.0", 8765, "hytech-foxglove", full_path, list_of_msg_names
+    )
     path_to_mcap = "."
     if os.path.exists("/etc/nixos"):
-        # logger.info("detected running on nixos")
+        logger.info("detected running on nixos")
         path_to_mcap = "/home/nixos/recordings"
-    # Start consumer in another thread
 
-    mcap_data_writer_consumer = HTPBMcapWriter(path_to_mcap, True, mcap_writer_feedback_queue, mcap_consumer_queue)
-    ht_foxglv_server = HTProtobufFoxgloveServer('0.0.0.0', 8765, 'test', full_path_to_bin, path_to_eth_bin, list_of_msg_names, foxglove_consumer_queue)
-
-    web_app = WebApp(
-        mcap_writer_feedback_queue,
-        webapp_consumer_queue,
-        webapp_mcap_writer_command_queue,
-        webapp_output_queue,
-        init_writing=True,
-        init_filename="asdf",
-        host="127.0.0.1",
-        port=8888,
+    init_writing_on_start = True
+    mcap_writer_status_queue = asyncio.Queue(maxsize=1)
+    mcap_writer_cmd_queue = asyncio.Queue(maxsize=1)
+    mcap_writer = HTPBMcapWriter(path_to_mcap, init_writing_on_start)
+    mcap_web_server = MCAPServer(
+        writer_command_queue=mcap_writer_cmd_queue,
+        writer_status_queue=mcap_writer_status_queue,
+        init_writing=init_writing_on_start,
+        init_filename=mcap_writer.actual_path
     )
-    
-    output_consumer = InterfaceConsumer(webapp_output_queue, mcu_ip, send_to_mcu_port)
+    receiver_task = asyncio.create_task(
+        continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)
+    )
+    fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
+    mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
+    srv_task = asyncio.create_task(mcap_web_server.start_server())
+    logger.info("created tasks")
+    # in the mcap task I actually have to deserialize the any protobuf msg into the message ID and
+    # the encoded message for the message id. I will need to handle the same association of message id
+    # and schema in the foxglove websocket server.
 
-
-    msg_out_thread = threading.Thread(target=output_consumer.run)
-    mcap_consumer_thread = threading.Thread(target=mcap_data_writer_consumer.run)
-    foxglove_consumer_thread = threading.Thread(target=ht_foxglv_server.run)
-    web_app_thread = threading.Thread(target=web_app.start_server)
-
-    foxglove_consumer_thread.start()
-    # mcap_consumer_thread.start()
-    # web_app_thread.start()
-    # msg_out_thread.start()
-
-    # producer_manager.join()
-    # mcap_consumer_thread.join()
-    # foxglove_consumer_thread.join()
+    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
-    main()
+    logging.basicConfig()
+    logger = logging.getLogger("data_writer_service")
+    logger.setLevel(logging.INFO)
+    asyncio.run(run(logger))
