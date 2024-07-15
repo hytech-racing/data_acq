@@ -137,7 +137,6 @@ async def continuous_video_receiver(queue, q2):
         compressed_image = QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
         await queue.put(compressed_image)
         await q2.put(compressed_image)
-        asyncio.sleep(0)
 
 
 async def continuous_can_receiver(
@@ -167,7 +166,7 @@ async def continuous_can_receiver(
             data = QueueData(msg.DESCRIPTOR.name, msg)
             await queue.put(data)
             await q2.put(data)
-            asyncio.sleep(0)
+            
 
 
         except Exception as e:
@@ -274,8 +273,8 @@ async def run(logger):
     )
 
     #testing these two tasks
-    aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
-    video_receiver_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
+    #aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
+    #video_receiver_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
 
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
@@ -286,7 +285,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(video_receiver_task, receiver_task, aero_receiver_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
