@@ -265,9 +265,11 @@ async def run(logger):
         init_filename=mcap_writer.actual_path
     )
     receiver_task = asyncio.create_task(
-        continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus),
-        # continuous_aero_receiver(queue, queue2),
-        continuous_video_receiver(queue, queue2)
+        asyncio.gather(
+            continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus),
+            # continuous_aero_receiver(queue, queue2),
+            continuous_video_receiver(queue, queue2)
+        )
     )
 
     #testing these two tasks
