@@ -138,16 +138,19 @@ async def continuous_video_receiver(queue, q2):
         if not ret:
             logger.error("Failed to read frame from video capture device")
             await asyncio.sleep(1)
+            continue
+        
         try:
             compressed_image = compress_frame_to_protobuf(frame)
-            print(1)
-            logger.info("Putting frame into queue")
-            await queue.put(compressed_image)
-            await q2.put(compressed_image)
-
+            if compressed_image:
+                await queue.put(compressed_image)
+                await q2.put(compressed_image)
+            else:
+                logger.error("Failed to compress frame")
         except Exception as e:
-            logger.info(e)
+            logger.error(f"Error processing frame: {e}")
 
+        await asyncio.sleep(0)
 
 async def continuous_can_receiver(
     can_msg_decoder: cantools.db.Database, message_classes, queue, q2, can_bus
