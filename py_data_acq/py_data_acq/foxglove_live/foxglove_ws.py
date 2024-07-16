@@ -26,14 +26,24 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         await super().__aenter__()
         # TODO add channels for all of the msgs that are in the protobuf schema
         for name in self.schema_names:
-            self.chan_id_dict[name] = await super().add_channel(
-            {
-                "topic": name +"_data",
-                "encoding": "protobuf",
-                "schemaName": name,
-                "schema": self.schema,
-            }
-        )
+            if name == "aero_data_ttyACM0" or name == "aero_data_ttyACM1":
+                self.chan_id_dict[name] = await super().add_channel(
+                {
+                    "topic": name +"_data",
+                    "encoding": "protobuf",
+                    "schemaName": "aero_data",
+                    "schema": self.schema,
+                }
+            )
+            else:
+                self.chan_id_dict[name] = await super().add_channel(
+                {
+                    "topic": name +"_data",
+                    "encoding": "protobuf",
+                    "schemaName": name,
+                    "schema": self.schema,
+                }
+            )
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):

@@ -23,7 +23,7 @@ def get_msg_names_and_classes():
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
             if isinstance(attr, type) and hasattr(attr, "DESCRIPTOR"):
-                message_names.append(attr.DESCRIPTOR.name + "_" + "ttyACM0")
+                message_names.append(attr.DESCRIPTOR.name + "_" + "ttyACM0")        
                 message_names.append(attr.DESCRIPTOR.name + "_" + "ttyACM1")
     def videovideo(module):
         for attr_name in dir(module):

@@ -213,7 +213,7 @@ async def write_data_to_mcap(
     writing = write_on_init
     async with mcap_writer as mcw:
         while True:
-            print("mcap task")
+            logger.info("mcap task")
             response_needed = False
             if not writer_cmd_queue.empty():
                 cmd_msg = writer_cmd_queue.get_nowait()
@@ -234,9 +234,10 @@ async def write_data_to_mcap(
 
 
 async def fxglv_websocket_consume_data(queue, foxglove_server):
+    logger.info("before")
     async with foxglove_server as fz:
         while True:
-            print("fx_task")
+            logger.info("fx_task")
             await fz.send_msgs_from_queue(queue)
 
 
