@@ -130,6 +130,7 @@ def compress_frame_to_protobuf(frame):
 async def continuous_video_receiver(queue, q2):
     logger.info("start")
     cap = cv2.VideoCapture(0)
+    logger.info("shiitttt")
     if not cap.isOpened():
         logger.error("Failed to open video capture device")
         return
