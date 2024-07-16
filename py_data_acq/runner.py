@@ -129,19 +129,27 @@ def compress_frame_to_protobuf(frame):
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     logger.info("start")
-    logger.info(cv2.getBuildInformation())
-    print(cv2.getBuildInformation())
     cap = cv2.VideoCapture("/dev/video0", cv2.CAP_V4L2)
     logger.info("shiitttt")
     if not cap.isOpened():
-        logger.error("Failed to open video capture device")
-        return
+        logger.error("Failed to open /dev/video0, trying /dev/video1")
+        
+        # Attempt to open the second video device
+        cap = cv2.VideoCapture("/dev/video1", cv2.CAP_V4L2)
+        
+        if not cap.isOpened():
+            logger.error("Failed to open /dev/video1")
+            return
+        else:
+            logger.info("/dev/video1 opened successfully")
+    else:
+        logger.info("/dev/video0 opened successfully")
+
 
     while True:
         ret, frame = await cap.read()
         if not ret:
             logger.error("Failed to read frame from video capture device")
-            cap = cv2.VideoCapture("/dev/video1", cv2.CAP_V4L2)
             continue
         
         try:
@@ -205,6 +213,7 @@ async def write_data_to_mcap(
     writing = write_on_init
     async with mcap_writer as mcw:
         while True:
+            print("mcap task")
             response_needed = False
             if not writer_cmd_queue.empty():
                 cmd_msg = writer_cmd_queue.get_nowait()
@@ -227,6 +236,7 @@ async def write_data_to_mcap(
 async def fxglv_websocket_consume_data(queue, foxglove_server):
     async with foxglove_server as fz:
         while True:
+            print("fx_task")
             await fz.send_msgs_from_queue(queue)
 
 
