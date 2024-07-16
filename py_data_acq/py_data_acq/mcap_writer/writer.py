@@ -80,9 +80,8 @@ class HTPBMcapWriter:
 
     async def write_data(self, queue):
         msg = await queue.get()
-        msg2 = await queue.get()
         if msg is not None:
-            return await self.write_msg(msg.pb_msg) and await self.write_msg(msg2.pb_msg)
+            return await self.write_msg(msg.pb_msg)
         
     async def write_aero(self, queue, port_name):
         msg = await queue.get()
