@@ -19,10 +19,24 @@ def get_msg_names_and_classes():
                 ] = google.protobuf.message_factory.GetMessageClass(
                     module.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
                 )
+    def aeroaero(module):
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if isinstance(attr, type) and hasattr(attr, "DESCRIPTOR"):
+                message_names.append(attr.DESCRIPTOR.name + "_" + "ttyACM0")
+                message_names.append(attr.DESCRIPTOR.name + "_" + "ttyACM1")
+    def videovideo(module):
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if isinstance(attr, type) and hasattr(attr, "DESCRIPTOR"):
+                message_names.append(attr.DESCRIPTOR.name)
 
     add_messages_from_module(hytech_pb2)
-    add_messages_from_module(aero_sensor_pb2)
-    add_messages_from_module(CompressedImage_pb2)
+    aeroaero(aero_sensor_pb2)
+    videovideo(CompressedImage_pb2)
+
+
+    
     return message_names, message_classes
 
 

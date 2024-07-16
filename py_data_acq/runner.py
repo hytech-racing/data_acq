@@ -128,6 +128,7 @@ def compress_frame_to_protobuf(frame):
 
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
+    print("start")
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         logger.error("Failed to open video capture device")
@@ -277,12 +278,14 @@ async def run(logger):
     mcap_writer_status_queue = asyncio.Queue(maxsize=1)
     mcap_writer_cmd_queue = asyncio.Queue(maxsize=1)
     mcap_writer = HTPBMcapWriter(path_to_mcap, init_writing_on_start)
+    print("lol")
     mcap_web_server = MCAPServer(
         writer_command_queue=mcap_writer_cmd_queue,
         writer_status_queue=mcap_writer_status_queue,
         init_writing=init_writing_on_start,
         init_filename=mcap_writer.actual_path
     )
+    print("mcao")
     receiver_task = asyncio.create_task(
             continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
     )
