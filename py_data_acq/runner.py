@@ -130,18 +130,20 @@ async def continuous_aero_receiver(queue, q2):
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
-    cap = cv2.VideoCapture(0)
+    
     async def capture_video():
-        
+        cap = cv2.VideoCapture(0)
         while True:
             ret, frame = await cap.read()
             if not ret:
                 break
             
             compressed_image = compress_frame_to_protobuf(frame)
-            await queue.put(compressed_image)
-            await q2.put(compressed_image)
-            await asyncio.sleep(0)  # Yield control to the event loop
+            asyncio.run_coroutine_threadsafe(queue.put(compressed_image))
+            asyncio.run_coroutine_threadsafe(q2.put(compressed_image))
+            #await queue.put(compressed_image)
+            #await q2.put(compressed_image)
+            #await asyncio.sleep(0)  # Yield control to the event loop
 
     await loop.run_in_executor(None, capture_video)
 
@@ -277,16 +279,13 @@ async def run(logger):
         init_writing=init_writing_on_start,
         init_filename=mcap_writer.actual_path
     )
-    receiver_task = asyncio.create_task(
-        asyncio.gather(
-            continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus), 
-            continuous_video_receiver(queue, queue2)
-                       )
-    )
+    #receiver_task = asyncio.create_task(
+    #        continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
+    #)
 
     #testing these two tasks
     #aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
-    #video_receiver_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
+    video_receiver_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
 
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
     mcap_task = asyncio.create_task(write_data_to_mcap(mcap_writer_cmd_queue, mcap_writer_status_queue, queue2, mcap_writer, init_writing_on_start))
@@ -297,7 +296,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(video_receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
