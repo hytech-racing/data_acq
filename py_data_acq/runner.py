@@ -142,11 +142,12 @@ async def continuous_video_receiver(queue, q2):
         try:
             compressed_image = compress_frame_to_protobuf(frame)
             print(1)
+            logger.info("Putting frame into queue")
             await queue.put(compressed_image)
             await q2.put(compressed_image)
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
 
 async def continuous_can_receiver(
