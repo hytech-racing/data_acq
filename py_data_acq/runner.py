@@ -129,21 +129,22 @@ async def continuous_aero_receiver(queue, q2):
 
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
-    async def capture_video():
-        cap = cv2.VideoCapture(0)
-        while True:
-            ret, frame = await cap.read()
-            if not ret:
-                break
-            
+    cap = cv2.VideoCapture(0)
+    while True:
+        ret, frame = await cap.read()
+        if not ret:
+            break
+        try:
             compressed_image = compress_frame_to_protobuf(frame)
             await queue.put(compressed_image)
             await q2.put(compressed_image)
-            #await queue.put(compressed_image)
-            #await q2.put(compressed_image)
-            #await asyncio.sleep(0)  # Yield control to the event loop
+        except Exception as e:
+            print(e)
+        #await queue.put(compressed_image)
+        #await q2.put(compressed_image)
+        #await asyncio.sleep(0)  # Yield control to the event loop
 
-    await asyncio.to_thread(capture_video)
+    #await asyncio.to_thread(capture_video)
 
 
 async def continuous_can_receiver(
@@ -257,7 +258,6 @@ async def run(logger):
     db = cantools.db.load_file(full_path_to_dbc)
 
     list_of_msg_names, msg_pb_classes = pb_helpers.get_msg_names_and_classes()
-    list_of_msg_names.append("CompressedImage")
 
     fx_s = HTProtobufFoxgloveServer(
         "0.0.0.0", 8765, "hytech-foxglove", full_path, list_of_msg_names
