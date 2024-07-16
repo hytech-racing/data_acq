@@ -224,7 +224,10 @@ async def write_data_to_mcap(
                 if response_needed:
                     await mcw.open_new_writer()
                     await writer_status_queue.put(MCAPServerStatusQueueData(True, mcw.actual_path))
-                await mcw.write_data(data_queue)
+                try:
+                    await mcw.write_data(data_queue)
+                except:
+                    logger.info('mcap write data error!')
             else:
                 if response_needed:
                     await writer_status_queue.put(MCAPServerStatusQueueData(False, mcw.actual_path))
@@ -238,7 +241,11 @@ async def fxglv_websocket_consume_data(queue, foxglove_server):
     async with foxglove_server as fz:
         while True:
             logger.info("fx_task")
-            await fz.send_msgs_from_queue(queue)
+            try: 
+                await fz.send_msgs_from_queue(queue)
+                logger.info("slayslay")
+            except:
+                logger.info("fxglv error write data")
 
 
 async def run(logger):
