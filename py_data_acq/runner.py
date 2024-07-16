@@ -130,9 +130,9 @@ async def continuous_aero_receiver(queue, q2):
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
-
+    cap = cv2.VideoCapture(0)
     async def capture_video():
-        cap = cv2.VideoCapture(0)
+        
         while True:
             ret, frame = await cap.read()
             if not ret:
@@ -282,7 +282,6 @@ async def run(logger):
             continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus), 
             continuous_video_receiver(queue, queue2)
                        )
-            
     )
 
     #testing these two tasks
