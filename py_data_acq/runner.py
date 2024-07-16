@@ -130,10 +130,15 @@ def compress_frame_to_protobuf(frame):
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        logger.error("Failed to open video capture device")
+        return
+
     while True:
         ret, frame = await cap.read()
         if not ret:
-            break
+            logger.error("Failed to read frame from video capture device")
+            await asyncio.sleep(1)
         try:
             compressed_image = compress_frame_to_protobuf(frame)
             print(1)
