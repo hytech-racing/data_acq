@@ -25,6 +25,12 @@ def get_msg_names_and_classes():
             ] = google.protobuf.message_factory.GetMessageClass(
                 CompressedImage_pb2.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
             )
+    attr = getattr(aero_sensor_pb2, "aero_sensor")
+    message_classes[
+                attr.DESCRIPTOR.name
+            ] = google.protobuf.message_factory.GetMessageClass(
+                aero_sensor_pb2.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
+            )
     message_names.append(attr.DESCRIPTOR.name)
     return message_names, message_classes
 
