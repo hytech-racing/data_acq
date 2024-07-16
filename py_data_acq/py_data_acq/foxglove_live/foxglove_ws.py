@@ -9,7 +9,8 @@ from foxglove_websocket.server import FoxgloveServer
 
 from base64 import standard_b64encode
 import time
-
+from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
+from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
@@ -27,12 +28,23 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         # TODO add channels for all of the msgs that are in the protobuf schema
         for name in self.schema_names:
             if name == "aero_data_ttyACM0" or name == "aero_data_ttyACM1":
+                schema_encoded = standard_b64encode(aero_sensor_pb2.DESCRIPTOR.serialized_pb).decode("ascii")
                 self.chan_id_dict[name] = await super().add_channel(
                 {
-                    "topic": name +"_data",
+                    "topic": name + "_data",
                     "encoding": "protobuf",
                     "schemaName": "aero_data",
-                    "schema": self.schema,
+                    "schema": schema_encoded,
+                }
+            )
+            elif name == "CompressedImage":
+                schema_encoded = standard_b64encode(CompressedImage.DESCRIPTOR.serialized_pb).decode("ascii")
+                self.chan_id_dict[name] = await super().add_channel(
+                {
+                    "topic": name + "_data",
+                    "encoding": "protobuf",
+                    "schemaName": name,
+                    "schema": schema_encoded,
                 }
             )
             else:
