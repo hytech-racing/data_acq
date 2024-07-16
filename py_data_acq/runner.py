@@ -129,7 +129,7 @@ def compress_frame_to_protobuf(frame):
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     logger.info("start")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture("v4l2src device=/dev/video0 ! videoconvert ! appsink", cv2.CAP_GSTREAMER)
     logger.info("shiitttt")
     if not cap.isOpened():
         logger.error("Failed to open video capture device")
