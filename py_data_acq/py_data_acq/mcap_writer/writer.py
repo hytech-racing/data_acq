@@ -82,23 +82,3 @@ class HTPBMcapWriter:
         msg = await queue.get()
         if msg is not None:
             return await self.write_msg(msg.pb_msg)
-        
-    async def write_aero(self, queue, port_name):
-        msg = await queue.get()
-        if msg is not None:
-            return await self.write_aero_msg(msg.pb_msg, port_name)
-        
-    async def write_aero_msg(self, msg, port_name):
-        if self.is_writing:
-            msg.readings_pa.extend(msg)
-            sensor_name = port_name.split("/")[-1]
-
-            self.mcap_writer_class.write_message(
-                topic=msg.DESCRIPTOR.name + "_" + sensor_name + "_data",
-                message=msg,
-                log_time=int(time.time_ns()),
-                publish_time=int(time.time_ns()),
-            )
-            self.writing_file.flush()
-        return True
-        
