@@ -3,10 +3,7 @@ from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 class QueueData():
     def __init__(self, schema_name: str, msg):
         self.name = schema_name
-        if self.name == CompressedImage().DESCRIPTOR.name:
-            self.data = msg
-        else:
-            self.data = msg.SerializeToString()
+        self.data = msg.SerializeToString()
         self.pb_msg = msg
 
 class MCAPServerStatusQueueData():
