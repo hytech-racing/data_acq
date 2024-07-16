@@ -124,12 +124,13 @@ def compress_frame_to_protobuf(frame):
     compressed_image.format = "jpeg"
     compressed_image.data = compressed_frame.tobytes()
     
-    return compressed_image
+    return QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
  #if no work then delete QUeueuData
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     logger.info("start")
     logger.info(cv2.getBuildInformation())
+    print(cv2.getBuildInformation())
     cap = cv2.VideoCapture("v4l2src device=/dev/video0 ! videoconvert ! appsink", cv2.CAP_GSTREAMER)
     logger.info("shiitttt")
     if not cap.isOpened():
