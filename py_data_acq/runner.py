@@ -47,17 +47,6 @@ def find_can_interface():
             return interface
     return None
 
-#deserializing frames
-def compress_frame_to_protobuf(frame):
-    ret, compressed_frame = cv2.imencode(".jpg", frame)
-    if not ret:
-        raise ValueError("Failed to compress frame")
-    
-    compressed_image = CompressedImage()
-    compressed_image.format = "jpeg"
-    compressed_image.data = compressed_frame.tobytes()
-    
-    return QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
 
 #add aero data to q
 async def append_sensor_data(queue, q2, data, port_name):
@@ -126,18 +115,31 @@ async def continuous_aero_receiver(queue, q2):
     listener.setup_listener(queue, q2, ports[0])
     listener2.setup_listener(queue, q2, ports[1])
 
+#deserializing frames
+def compress_frame_to_protobuf(frame):
+    ret, compressed_frame = cv2.imencode(".jpg", frame)
+    if not ret:
+        raise ValueError("Failed to compress frame")
+    
+    compressed_image = CompressedImage()
+    compressed_image.format = "jpeg"
+    compressed_image.data = compressed_frame.tobytes()
+    
+    return QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
 
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     while True:
         ret, frame = await cap.read()
         if not ret:
             break
         try:
             compressed_image = compress_frame_to_protobuf(frame)
+            print(1)
             await queue.put(compressed_image)
             await q2.put(compressed_image)
+
         except Exception as e:
             print(e)
         #await queue.put(compressed_image)

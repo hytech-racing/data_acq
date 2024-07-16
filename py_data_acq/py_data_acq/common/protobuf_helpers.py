@@ -3,6 +3,7 @@ import google.protobuf.message_factory
 from cantools.database import *
 from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
+from foxglove_schemas_protobuf import CompressedImage_pb2 
 
 def get_msg_names_and_classes():
     message_names = []
@@ -18,8 +19,13 @@ def get_msg_names_and_classes():
             ] = google.protobuf.message_factory.GetMessageClass(
                 hytech_pb2.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
             )
-    message_classes[CompressedImage.DESCRIPTOR.name] = CompressedImage.DESCRIPTOR.name
-    message_names.append(CompressedImage.DESCRIPTOR.name)
+    attr = getattr(CompressedImage_pb2, "CompressedImage")
+    message_classes[
+                attr.DESCRIPTOR.name
+            ] = google.protobuf.message_factory.GetMessageClass(
+                CompressedImage_pb2.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
+            )
+    message_names.append(attr.DESCRIPTOR.name)
     return message_names, message_classes
 
 
