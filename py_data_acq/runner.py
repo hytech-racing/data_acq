@@ -258,6 +258,7 @@ async def run(logger):
 
     list_of_msg_names, msg_pb_classes = pb_helpers.get_msg_names_and_classes()
     list_of_msg_names.append("CompressedImage")
+    
     fx_s = HTProtobufFoxgloveServer(
         "0.0.0.0", 8765, "hytech-foxglove", full_path, list_of_msg_names
     )
