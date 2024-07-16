@@ -131,7 +131,7 @@ async def continuous_video_receiver(queue, q2):
     logger.info("start")
     logger.info(cv2.getBuildInformation())
     print(cv2.getBuildInformation())
-    cap = cv2.VideoCapture("v4l2src device=/dev/video0 ! videoconvert ! appsink", cv2.CAP_GSTREAMER)
+    cap = cv2.VideoCapture("/dev/video0", cv2.CAP_V4L2)
     logger.info("shiitttt")
     if not cap.isOpened():
         logger.error("Failed to open video capture device")
