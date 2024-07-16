@@ -141,7 +141,7 @@ async def continuous_video_receiver(queue, q2):
         ret, frame = await cap.read()
         if not ret:
             logger.error("Failed to read frame from video capture device")
-            await asyncio.sleep(1)
+            cap = cv2.VideoCapture("/dev/video1", cv2.CAP_V4L2)
             continue
         
         try:
