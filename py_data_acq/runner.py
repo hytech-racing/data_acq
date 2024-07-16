@@ -124,8 +124,8 @@ def compress_frame_to_protobuf(frame):
     compressed_image.format = "jpeg"
     compressed_image.data = compressed_frame.tobytes()
     
-    return QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
-
+    return compressed_image
+ #if no work then delete QUeueuData
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     logger.info("start")
