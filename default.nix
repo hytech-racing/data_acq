@@ -32,6 +32,7 @@ python311Packages.buildPythonApplication {
     python311Packages.aiohttp
     aero_sensor_protos_np_proto_py
     python311Packages.opencv4
+    python311Packages.gst-python
 
 
     python311Packages.protobuf
