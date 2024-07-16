@@ -41,12 +41,12 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
 
     async def send_msgs_from_queue(self, queue: asyncio.Queue[QueueData]):
         try:
-            logger.info("waiting for data")
+            print("waiting for data")
             data = await queue.get()
             
             if data is not None:
-                logger.info("Data received")
+                print("Data received")
                 await super().send_message(self.chan_id_dict[data.name], time.time_ns(), data.data)
-                logger.info("send data success")
+                print("send data success")
         except asyncio.CancelledError:
             pass
