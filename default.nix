@@ -33,12 +33,7 @@ python311Packages.buildPythonApplication {
     aero_sensor_protos_np_proto_py
     python311Packages.opencv4
     python311Packages.gst-python
-    gst_all_1.gstreamer
-    gst_all_1.gst-plugins-ugly
-    gst_all_1.gst-plugins-good
-    gst_all_1.gst-plugins-bad
-    gst_all_1.gst-devtools
-    gst_all_1.gst-plugins-base
+    
 
 
     python311Packages.protobuf
