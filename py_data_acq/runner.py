@@ -129,7 +129,7 @@ def compress_frame_to_protobuf(frame):
 
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     while True:
         ret, frame = await cap.read()
         if not ret:
@@ -142,11 +142,6 @@ async def continuous_video_receiver(queue, q2):
 
         except Exception as e:
             print(e)
-        #await queue.put(compressed_image)
-        #await q2.put(compressed_image)
-        #await asyncio.sleep(0)  # Yield control to the event loop
-
-    #await asyncio.to_thread(capture_video)
 
 
 async def continuous_can_receiver(
