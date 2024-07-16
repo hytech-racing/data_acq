@@ -149,7 +149,7 @@ async def continuous_video_receiver(queue, q2):
         except Exception as e:
             logger.info(e)
 
-
+''' 
 async def continuous_can_receiver(
     can_msg_decoder: cantools.db.Database, message_classes, queue, q2, can_bus
 ):
@@ -188,7 +188,7 @@ async def continuous_can_receiver(
     # Don't forget to stop the notifier to clean up resources.
     notifier.stop()
 
-
+'''
 async def write_data_to_mcap(
     writer_cmd_queue: asyncio.Queue,
     writer_status_queue: asyncio.Queue,
@@ -227,6 +227,7 @@ async def fxglv_websocket_consume_data(queue, foxglove_server):
 async def run(logger):
     # for example, we will have CAN as our only input as of right now but we may need to add in
     # a sensor that inputs over UART or ethernet
+    '''
     can_interface = find_can_interface()
 
     if can_interface:
@@ -243,7 +244,7 @@ async def run(logger):
         bus = can.Bus(
             channel=UdpMulticastBus.DEFAULT_GROUP_IPv6, interface="udp_multicast"
         )
-
+    '''
     queue = asyncio.Queue()
     queue2 = asyncio.Queue()
     path_to_bin = ""
