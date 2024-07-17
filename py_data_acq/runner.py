@@ -128,7 +128,6 @@ def compress_frame_to_protobuf(frame):
  #if no work then delete QUeueuData
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
-    logger.info("start")
     cap = cv2.VideoCapture("/dev/video0", cv2.CAP_V4L2)
     if not cap.isOpened():
         logger.error("Failed to open /dev/video0, trying /dev/video1")
@@ -214,7 +213,6 @@ async def write_data_to_mcap(
     writing = write_on_init
     async with mcap_writer as mcw:
         while True:
-            logger.info("mcap task")
             response_needed = False
             if not writer_cmd_queue.empty():
                 cmd_msg = writer_cmd_queue.get_nowait()
@@ -238,13 +236,10 @@ async def write_data_to_mcap(
 
 
 async def fxglv_websocket_consume_data(queue, foxglove_server):
-    logger.info("before")
     async with foxglove_server as fz:
         while True:
-            logger.info("fx_task")
             try: 
                 await fz.send_msgs_from_queue(queue)
-                logger.info("slayslay")
             except:
                 logger.info("fxglv error write data")
 
