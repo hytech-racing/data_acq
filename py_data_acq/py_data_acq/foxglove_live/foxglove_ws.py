@@ -11,6 +11,8 @@ from base64 import standard_b64encode
 import time
 
 from base64 import b64encode
+import google.protobuf.message
+from typing import Set, Type
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 from foxglove_schemas_protobuf import CompressedImage_pb2 
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
