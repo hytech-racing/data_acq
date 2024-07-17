@@ -27,27 +27,6 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         await super().__aenter__()
         # TODO add channels for all of the msgs that are in the protobuf schema
         for name in self.schema_names:
-            if name == "aero_data_ttyACM0" or name == "aero_data_ttyACM1":
-                schema_encoded = standard_b64encode(aero_sensor_pb2.DESCRIPTOR.serialized_pb).decode("ascii")
-                self.chan_id_dict[name] = await super().add_channel(
-                {
-                    "topic": name + "_data",
-                    "encoding": "protobuf",
-                    "schemaName": "aero_data",
-                    "schema": schema_encoded,
-                }
-            )
-            elif name == "CompressedImage":
-                schema_encoded = standard_b64encode(CompressedImage.DESCRIPTOR.serialized_pb).decode("ascii")
-                self.chan_id_dict[name] = await super().add_channel(
-                {
-                    "topic": name + "_data",
-                    "encoding": "protobuf",
-                    "schemaName": name,
-                    "schema": schema_encoded,
-                }
-            )
-            else:
                 self.chan_id_dict[name] = await super().add_channel(
                 {
                     "topic": name +"_data",
