@@ -10,10 +10,33 @@ from foxglove_websocket.server import FoxgloveServer
 from base64 import standard_b64encode
 import time
 
+from base64 import b64encode
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 from foxglove_schemas_protobuf import CompressedImage_pb2 
+from google.protobuf.descriptor_pb2 import FileDescriptorSet
+from google.protobuf.descriptor import FileDescriptor
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
+
+def build_file_descriptor_set(
+        message_class: Type[google.protobuf.message.Message],
+    ) -> FileDescriptorSet:
+        """
+        Build a FileDescriptorSet representing the message class and its dependencies.
+        """
+        file_descriptor_set = FileDescriptorSet()
+        seen_dependencies: Set[str] = set()
+
+        def append_file_descriptor(file_descriptor: FileDescriptor):
+            for dep in file_descriptor.dependencies:
+                if dep.name not in seen_dependencies:
+                    seen_dependencies.add(dep.name)
+                    append_file_descriptor(dep)
+            file_descriptor.CopyToProto(file_descriptor_set.file.add())  # type: ignore
+
+        append_file_descriptor(message_class.DESCRIPTOR.file)
+        return file_descriptor_set
+
 class HTProtobufFoxgloveServer(FoxgloveServer):
     def __init__(self, host: str, port: int, name: str, pb_bin_file_path: str, schema_names: list[str]):
         super().__init__(host, port, name)
@@ -23,6 +46,8 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         self.chan_id_dict = {}
         
     # this is run when we use this in a with statement for context management
+    
+    
     async def __aenter__(self): 
         await super().__aenter__()
         # TODO add channels for all of the msgs that are in the protobuf schema
@@ -37,10 +62,12 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         )
         self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await().add_channel(
             {
-                "topic": CompressedImage.DESCRIPTOR.name +"_data",
+                "topic": CompressedImage,
                 "encoding": "protobuf",
                 "schemaName": CompressedImage.DESCRIPTOR.name,
-                "schema": CompressedImage_pb2,
+                "schema":  b64encode(
+                    build_file_descriptor_set(CompressedImage).SerializeToString(),
+                    ).decode("ascii")
             }
         )
         return self
