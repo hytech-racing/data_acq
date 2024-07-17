@@ -155,8 +155,6 @@ async def continuous_video_receiver(queue, q2):
             if compressed_image:
                 await queue.put(compressed_image)
                 await q2.put(compressed_image)
-                logger.info("shiitttt")
-
             else:
                 logger.error("Failed to compress frame")
         except Exception as e:
@@ -295,7 +293,6 @@ async def run(logger):
     mcap_writer_status_queue = asyncio.Queue(maxsize=1)
     mcap_writer_cmd_queue = asyncio.Queue(maxsize=1)
     mcap_writer = HTPBMcapWriter(path_to_mcap, init_writing_on_start)
-    logger.info("lol")
     mcap_web_server = MCAPServer(
         writer_command_queue=mcap_writer_cmd_queue,
         writer_status_queue=mcap_writer_status_queue,

@@ -9,9 +9,8 @@ from foxglove_websocket.server import FoxgloveServer
 
 from base64 import standard_b64encode
 import time
-from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
-from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
-from foxglove_schemas_protobuf import CompressedImage_pb2
+
+
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
 class HTProtobufFoxgloveServer(FoxgloveServer):
@@ -27,22 +26,15 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         await super().__aenter__()
         # TODO add channels for all of the msgs that are in the protobuf schema
         for name in self.schema_names:
-                self.chan_id_dict[name] = await super().add_channel(
-                {
-                    "topic": name +"_data",
-                    "encoding": "protobuf",
-                    "schemaName": name,
-                    "schema": self.schema,
-                }
-            )
-        self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await super().add_channel(
-                {
-                    "topic": CompressedImage.DESCRIPTOR.name +"_data",
-                    "encoding": "protobuf",
-                    "schemaName": CompressedImage.DESCRIPTOR.name,
-                    "schema": CompressedImage_pb2,
-                }
-            )   
+            self.chan_id_dict[name] = await super().add_channel(
+            {
+                "topic": name +"_data",
+                "encoding": "protobuf",
+                "schemaName": name,
+                "schema": self.schema,
+            }
+        )
+        
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):
@@ -50,12 +42,8 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
 
     async def send_msgs_from_queue(self, queue: asyncio.Queue[QueueData]):
         try:
-            print("waiting for data")
             data = await queue.get()
-            
             if data is not None:
-                print("Data received")
                 await super().send_message(self.chan_id_dict[data.name], time.time_ns(), data.data)
-                print("send data success")
         except asyncio.CancelledError:
             pass
