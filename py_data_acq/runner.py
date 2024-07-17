@@ -130,7 +130,6 @@ def compress_frame_to_protobuf(frame):
 async def continuous_video_receiver(queue, q2):
     logger.info("start")
     cap = cv2.VideoCapture("/dev/video0", cv2.CAP_V4L2)
-    logger.info("shiitttt")
     if not cap.isOpened():
         logger.error("Failed to open /dev/video0, trying /dev/video1")
         
@@ -157,6 +156,8 @@ async def continuous_video_receiver(queue, q2):
             if compressed_image:
                 await queue.put(compressed_image)
                 await q2.put(compressed_image)
+                logger.info("shiitttt")
+
             else:
                 logger.error("Failed to compress frame")
         except Exception as e:

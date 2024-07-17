@@ -11,7 +11,7 @@ from base64 import standard_b64encode
 import time
 from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
-
+from foxglove_schemas_protobuf import CompressedImage_pb2
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
 class HTProtobufFoxgloveServer(FoxgloveServer):
@@ -35,6 +35,14 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                     "schema": self.schema,
                 }
             )
+        self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await super().add_channel(
+                {
+                    "topic": CompressedImage.DESCRIPTOR.name +"_data",
+                    "encoding": "protobuf",
+                    "schemaName": CompressedImage.DESCRIPTOR.name,
+                    "schema": CompressedImage_pb2,
+                }
+            )   
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):

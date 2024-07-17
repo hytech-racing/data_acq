@@ -20,8 +20,8 @@ def get_msg_names_and_classes():
                     module.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
                 )
     add_messages_from_module(hytech_pb2)
-    add_messages_from_module(aero_sensor_pb2)
-    add_messages_from_module(CompressedImage_pb2)
+    #add_messages_from_module(aero_sensor_pb2)
+    #add_messages_from_module(CompressedImage_pb2)
 
 
     
