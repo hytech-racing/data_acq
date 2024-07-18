@@ -150,8 +150,8 @@ async def continuous_video_receiver(queue, q2):
         try:
             compressed_image = compress_frame_to_protobuf(frame)
             if compressed_image:
-                await queue.put(compressed_image)
-                await q2.put(compressed_image)
+                await queue.put(QueueData("foxglove.CompressedImage", compressed_image))
+                await q2.put(QueueData("foxglove.CompressedImage", compressed_image))
             else:
                 logger.error("Failed to compress frame")
         except Exception as e:
@@ -220,6 +220,7 @@ async def write_data_to_mcap(
                 try:
                     await mcw.write_data(data_queue)
                 except:
+                    logger.info(data_queue)
                     logger.info('mcap write data error!')
             else:
                 if response_needed:
@@ -233,6 +234,7 @@ async def fxglv_websocket_consume_data(queue, foxglove_server):
     async with foxglove_server as fz:
         while True:
             try: 
+                logger.info(queue)
                 await fz.send_msgs_from_queue(queue)
             except:
                 logger.info("fxglv error write data")
