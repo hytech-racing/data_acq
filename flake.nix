@@ -126,7 +126,7 @@
           in ''
             path=${pkgs.proto_gen_pkg}
             bin_path=$path"/bin"
-            dbc_path=${pkgs.ht_can_pkg pkgs.py_foxglove_proto_schemas_pkg pkgs.aero_sensor_protos_np_proto_py}
+            dbc_path=${pkgs.ht_can_pkg}
             export HT_ETH_BIN_PATH=${pkgs.ht_eth_protos_gen_pkg}"/bin"
             export BIN_PATH=$bin_path
             export DBC_PATH=$dbc_path
