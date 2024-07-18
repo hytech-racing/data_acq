@@ -1,11 +1,11 @@
-{pkgs, py_dbc_proto_gen_pkg, ht_can_pkg, protobuf, py_foxglove_proto_schemas_pkg, aero_sensor_protos_np_proto_py}:
+{pkgs, py_dbc_proto_gen_pkg, ht_can_pkg, protobuf}:
 
 pkgs.stdenv.mkDerivation rec {
   name = "ht-proto-gen";
   
   src = builtins.filterSource (path: type: false) ./.;
   
-  buildInputs = [ py_dbc_proto_gen_pkg ht_can_pkg protobuf py_foxglove_proto_schemas_pkg aero_sensor_protos_np_proto_py]; # Python as a build dependency
+  buildInputs = [ py_dbc_proto_gen_pkg ht_can_pkg protobuf]; # Python as a build dependency
   
   # Define the build phase to execute the scripts
   buildPhase = ''
