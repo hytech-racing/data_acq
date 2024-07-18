@@ -131,10 +131,7 @@ async def continuous_video_receiver(queue, q2):
     cap = cv2.VideoCapture("/dev/video0", cv2.CAP_V4L2)
     if not cap.isOpened():
         logger.error("Failed to open /dev/video0, trying /dev/video1")
-        
-        # Attempt to open the second video device
         cap = cv2.VideoCapture("/dev/video1", cv2.CAP_V4L2)
-        
         if not cap.isOpened():
             logger.error("Failed to open /dev/video1")
             return
@@ -160,7 +157,6 @@ async def continuous_video_receiver(queue, q2):
         except Exception as e:
             logger.error(f"Error processing frame: {e}")
 
-        await asyncio.sleep(0)
 
 async def continuous_can_receiver(
     can_msg_decoder: cantools.db.Database, message_classes, queue, q2, can_bus
@@ -300,9 +296,9 @@ async def run(logger):
         init_filename=mcap_writer.actual_path
     )
     logger.info("mcao")
-    #receiver_task = asyncio.create_task(
-    #        continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
-    #)
+    receiver_task = asyncio.create_task(
+            continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
+    )
 
     #testing these two tasks
     #aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
@@ -317,7 +313,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(video_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
