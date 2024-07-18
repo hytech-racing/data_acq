@@ -141,7 +141,9 @@ async def continuous_video_receiver(queue, q2):
             logger.info("/dev/video1 opened successfully")
     else:
         logger.info("/dev/video0 opened successfully")
-    cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     while True:
         ret, frame = await loop.run_in_executor(None, cap.read)
         if not ret:
