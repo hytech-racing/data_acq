@@ -62,7 +62,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 "schema": self.schema,
             }
         )
-        self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await().add_channel(
+        self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await super().add_channel(
             {
                 "topic": CompressedImage,
                 "encoding": "protobuf",
