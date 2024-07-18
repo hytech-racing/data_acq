@@ -104,8 +104,8 @@ with open("hytech.proto", "w+") as proto_file:
     for msg in db.messages:
         proto_file = append_proto_message_from_CAN_message(proto_file, msg)
     video_schema = (
-        "message CompressedImage {"
-        "    google.protobuf.Timestamp timestamp = 1;"
+        "message CompressedImage {\n"
+        "    google.protobuf.Timestamp timestamp = 1;\n\n"
         "    string frame_id = 4;\n\n"
         "    bytes data = 2;\n\n"
         "    string format = 3;\n}\n\n"
