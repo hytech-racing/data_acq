@@ -21,7 +21,7 @@ def get_msg_names_and_classes():
                 )
     add_messages_from_module(hytech_pb2)
     #add_messages_from_module(aero_sensor_pb2)
-    add_messages_from_module(CompressedImage_pb2)
+    #add_messages_from_module(CompressedImage_pb2)
 
 
     

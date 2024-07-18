@@ -68,7 +68,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
             {
                 "topic": CompressedImage.DESCRIPTOR.name,
                 "encoding": "protobuf",
-                "schemaName": CompressedImage.DESCRIPTOR.name,
+                "schemaName": "foxglove.CompressedImage",
                 "schema": b64encode(
                     build_file_descriptor_set(CompressedImage).SerializeToString()
                 ).decode("ascii"),
