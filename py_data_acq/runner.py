@@ -125,41 +125,37 @@ def compress_frame_to_protobuf(frame):
     compressed_image.data = compressed_frame.tobytes()
     
     return compressed_image
+async def open_camera(loop, device, formats):
+    cap = None
+    for fmt in formats:
+        cap = await loop.run_in_executor(None, cv2.VideoCapture, device, cv2.CAP_V4L2)
+        if not cap.isOpened():
+            logger.error(f"Failed to open {device}")
+            continue
+        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
+        if check_format(cap, fmt):
+            logger.info(f"{device} opened successfully with {fmt}")
+            return cap
+        else:
+            logger.error(f"Failed to set format {fmt} on {device}")
+            cap.release()
+    return None
+
 def check_format(cap, fmt):
-    # Helper function to check if the format is set correctly
-    actual_fmt = cap.get(cv2.CAP_PROP_FOURCC)
+    actual_fmt = int(cap.get(cv2.CAP_PROP_FOURCC))
     return actual_fmt == cv2.VideoWriter_fourcc(*fmt)
  #if no work then delete QUeueuData
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
 
-    #this works but the frames are weird as shit wtf
-    cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video2", cv2.CAP_V4L2)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('Y', 'U', 'Y', 'V'))
-    if not cap.isOpened() or not check_format(cap, 'YUYV'):
-        logger.error("Failed to open /dev/video0 with YUYV, trying MJPG")
-        cap.release()
-        
-        # Try to open the video device with MJPG format
-        cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video1", cv2.CAP_V4L2)
-        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('Y', 'U', 'Y', 'V'))
-        if not cap.isOpened() or not check_format(cap, 'YUYV'):
-            logger.error("Failed to open /dev/video0 with MJPG, trying /dev/video1")
-            cap.release()
-            
-            # Try to open the fallback device /dev/video1 with MJPG format
-            cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video0", cv2.CAP_V4L2)
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('Y', 'U', 'Y', 'V'))
-            if not cap.isOpened() or not check_format(cap, 'YUYV'):
-                logger.error("Failed to open /dev/video1 with MJPG")
-                return
-            else:
-                logger.info("/dev/video1 opened successfully with MJPG")
-        else:
-            logger.info("/dev/video0 opened successfully with MJPG")
-    else:
-        logger.info("/dev/video0 opened successfully with YUYV")
+    formats = [('Y', 'U', 'Y', 'V'), ('M', 'J', 'P', 'G')]
+
+    cap = await open_camera(loop, "/dev/video1", formats)
+    if not cap:
+        cap = await open_camera(loop, "/dev/video0", formats)
+        if not cap:
+            logger.error("Failed to open any video device")
 
     while True:
         ret, frame = await loop.run_in_executor(None, cap.read)
