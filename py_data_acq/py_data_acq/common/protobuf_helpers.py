@@ -1,9 +1,7 @@
 from hytech_np_proto_py import hytech_pb2
 import google.protobuf.message_factory
 from cantools.database import *
-from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
-from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
-from foxglove_schemas_protobuf import CompressedImage_pb2 
+
 
 def get_msg_names_and_classes():
     message_names = []
@@ -20,8 +18,7 @@ def get_msg_names_and_classes():
                     module.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
                 )
     add_messages_from_module(hytech_pb2)
-    #add_messages_from_module(aero_sensor_pb2)
-    #add_messages_from_module(CompressedImage_pb2)
+
 
 
     

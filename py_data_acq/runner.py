@@ -114,7 +114,7 @@ async def continuous_aero_receiver(queue, q2):
     listener.setup_listener(queue, q2, ports[0])
     listener2.setup_listener(queue, q2, ports[1])
 
-#deserializing frames
+# Packing frames in protobuf
 def compress_frame_to_protobuf(frame):
     ret, compressed_frame = cv2.imencode(".jpg", frame)
     if not ret:
@@ -125,6 +125,7 @@ def compress_frame_to_protobuf(frame):
     compressed_image.data = compressed_frame.tobytes()
     
     return compressed_image
+    
 async def open_camera(loop, device, formats):
     cap = None
     for fmt in formats:
@@ -144,8 +145,8 @@ async def open_camera(loop, device, formats):
 def check_format(cap, fmt):
     actual_fmt = int(cap.get(cv2.CAP_PROP_FOURCC))
     return actual_fmt == cv2.VideoWriter_fourcc(*fmt)
- #if no work then delete QUeueuData
-#Webcam listener
+    
+# Webcam frame receiver
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
     #sudo rmmod uvcvideo
@@ -167,6 +168,7 @@ async def continuous_video_receiver(queue, q2):
         try:
             compressed_image = compress_frame_to_protobuf(frame)
             if compressed_image:
+                # Foxglove schemas names must match documentation!
                 await queue.put(QueueData("foxglove.CompressedImage", compressed_image))
                 await q2.put(QueueData("foxglove.CompressedImage", compressed_image))
             else:
