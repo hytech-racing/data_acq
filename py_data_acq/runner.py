@@ -128,10 +128,11 @@ def compress_frame_to_protobuf(frame):
  #if no work then delete QUeueuData
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
-    cap = cv2.VideoCapture("/dev/video0", cv2.CAP_V4L2)
+    loop = asyncio.get_event_loop()
+    cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video0", cv2.CAP_V4L2)
     if not cap.isOpened():
         logger.error("Failed to open /dev/video0, trying /dev/video1")
-        cap = cv2.VideoCapture("/dev/video1", cv2.CAP_V4L2)
+        cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video1", cv2.CAP_V4L2)
         if not cap.isOpened():
             logger.error("Failed to open /dev/video1")
             return
@@ -140,9 +141,8 @@ async def continuous_video_receiver(queue, q2):
     else:
         logger.info("/dev/video0 opened successfully")
 
-
     while True:
-        ret, frame = await cap.read()
+        ret, frame = await loop.run_in_executor(None, cap.read)
         if not ret:
             logger.error("Failed to read frame from video capture device")
             continue
