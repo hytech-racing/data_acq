@@ -125,25 +125,40 @@ def compress_frame_to_protobuf(frame):
     compressed_image.data = compressed_frame.tobytes()
     
     return compressed_image
+def check_format(cap, fmt):
+    # Helper function to check if the format is set correctly
+    actual_fmt = cap.get(cv2.CAP_PROP_FOURCC)
+    return actual_fmt == cv2.VideoWriter_fourcc(*fmt)
  #if no work then delete QUeueuData
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
     cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video0", cv2.CAP_V4L2)
-    
-    if not cap.isOpened():
-        logger.error("Failed to open /dev/video0, trying /dev/video1")
-        cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video1", cv2.CAP_V4L2)
-        if not cap.isOpened():
-            logger.error("Failed to open /dev/video1")
-            return
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('Y', 'U', 'Y', 'V'))
+    if not cap.isOpened() or not check_format(cap, 'YUYV'):
+        logger.error("Failed to open /dev/video0 with YUYV, trying MJPG")
+        cap.release()
+        
+        # Try to open the video device with MJPG format
+        cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video0", cv2.CAP_V4L2)
+        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        if not cap.isOpened() or not check_format(cap, 'MJPG'):
+            logger.error("Failed to open /dev/video0 with MJPG, trying /dev/video1")
+            cap.release()
+            
+            # Try to open the fallback device /dev/video1 with MJPG format
+            cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video1", cv2.CAP_V4L2)
+            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+            if not cap.isOpened() or not check_format(cap, 'MJPG'):
+                logger.error("Failed to open /dev/video1 with MJPG")
+                return
+            else:
+                logger.info("/dev/video1 opened successfully with MJPG")
         else:
-            logger.info("/dev/video1 opened successfully")
+            logger.info("/dev/video0 opened successfully with MJPG")
     else:
-        logger.info("/dev/video0 opened successfully")
-    #cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        logger.info("/dev/video0 opened successfully with YUYV")
+
     while True:
         ret, frame = await loop.run_in_executor(None, cap.read)
         if not ret:
