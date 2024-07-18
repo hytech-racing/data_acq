@@ -2,6 +2,8 @@
 import cantools
 from cantools.database import *
 import pkg_resources
+from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
+from foxglove_schemas_protobuf import CompressedImage_pb2 
 import sys
 
 class HyTechCANmsg:
@@ -89,6 +91,7 @@ def append_proto_message_from_CAN_message(file, can_msg: can.message.Message):
     file.write("}\n\n")
     return file
 
+
 # load dbc file from the package location
 
 if(len (sys.argv) > 1):
@@ -101,4 +104,7 @@ with open("hytech.proto", "w+") as proto_file:
     proto_file.write('syntax = "proto3";\n\n')
     for msg in db.messages:
         proto_file = append_proto_message_from_CAN_message(proto_file, msg)
+    video_schema = "message CompressedImage {" + "    string frame_id = 4;\n\n" 
+    + "    bytes data = 2;\n\n" + "    string format = 3;\n}\n\n"
+    proto_file.write(video_schema + "\n\n")
     
