@@ -133,6 +133,8 @@ def check_format(cap, fmt):
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
+
+    #this works but the frames are weird as shit wtf
     cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video0")
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('Y', 'U', 'Y', 'V'))
     if not cap.isOpened() or not check_format(cap, 'YUYV'):
