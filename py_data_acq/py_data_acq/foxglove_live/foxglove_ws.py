@@ -10,6 +10,7 @@ from foxglove_websocket.server import FoxgloveServer
 from base64 import standard_b64encode
 import time
 
+
 from base64 import b64encode
 import google.protobuf.message
 from typing import Set, Type
@@ -21,6 +22,7 @@ from google.protobuf.message import Message
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
 
+# Make proto file descriptor
 def build_file_descriptor_set(
     message_class: Type[google.protobuf.message.Message],
 ) -> FileDescriptorSet:
@@ -54,7 +56,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
     
     async def __aenter__(self): 
         await super().__aenter__()
-        # TODO add channels for all of the msgs that are in the protobuf schema
+        # TODO add channels for all of the msgs that are in the protobuf schema!
         for name in self.schema_names:
             self.chan_id_dict[name] = await super().add_channel(
             {
@@ -64,6 +66,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 "schema": self.schema,
             }
         )
+        # Adding schema to channel example
         self.chan_id_dict["foxglove.CompressedImage"] = await super().add_channel(
             {
                 "topic": CompressedImage.DESCRIPTOR.name,
@@ -84,6 +87,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         try:
             data = await queue.get()
             if data is not None:
+                # send data to channel
                 await super().send_message(self.chan_id_dict[data.name], time.time_ns(), data.data)
         except asyncio.CancelledError:
             pass
