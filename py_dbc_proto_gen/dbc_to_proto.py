@@ -2,8 +2,6 @@
 import cantools
 from cantools.database import *
 import pkg_resources
-from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
-from foxglove_schemas_protobuf import CompressedImage_pb2 
 import sys
 
 class HyTechCANmsg:
