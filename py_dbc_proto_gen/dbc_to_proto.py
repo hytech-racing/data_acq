@@ -3,8 +3,6 @@ import cantools
 from cantools.database import *
 import pkg_resources
 import sys
-from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
-from foxglove_schemas_protobuf import CompressedImage_pb2 
 
 class HyTechCANmsg:
     def __init__(self):
