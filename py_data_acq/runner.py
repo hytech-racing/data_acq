@@ -161,7 +161,7 @@ async def continuous_video_receiver(queue, q2):
     else:
         logger.info("/dev/video0 opened successfully with YUYV")
 
-    while True:
+    while (cv2.waitKey(1) != 27):
         ret, frame = await loop.run_in_executor(None, cap.read)
         if not ret:
             logger.error("Failed to read frame from video capture device")
