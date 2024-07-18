@@ -19,6 +19,8 @@ from foxglove_schemas_protobuf import CompressedImage_pb2
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
 from google.protobuf.descriptor import FileDescriptor
 from google.protobuf.message import Message
+from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
+from aero_sensor_protos_np_proto_py.aero_sensor_pb2 import aero_data
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
 
@@ -67,7 +69,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
             }
         )
         # Adding schema to channel example
-        self.chan_id_dict["foxglove.CompressedImage"] = await super().add_channel(
+        '''self.chan_id_dict["foxglove.CompressedImage"] = await super().add_channel(
             {
                 "topic": CompressedImage.DESCRIPTOR.name,
                 "encoding": "protobuf",
@@ -77,7 +79,30 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 ).decode("ascii"),
                 "schemaEncoding": "protobuf",
             }
-        )    
+        )  '''
+        self.chan_id_dict["aero_data_ttyACM0_data"]  = await super().add_channel(
+            {
+                "topic": "aero_data_ttyACM0_data",
+                "encoding": "protobuf",
+                "schemaName": "aero_sensor.aero_data",
+                "schema": b64encode(
+                    build_file_descriptor_set(aero_data).SerializeToString()
+                ).decode("ascii"),
+                "schemaEncoding": "protobuf",
+            }
+        )
+        self.chan_id_dict["aero_data_ttyACM1_data"]  = await super().add_channel(
+            {
+                "topic": "aero_data_ttyACM1_data",
+                "encoding": "protobuf",
+                "schemaName": "aero_sensor.aero_data",
+                "schema": b64encode(
+                    build_file_descriptor_set(aero_data).SerializeToString()
+                ).decode("ascii"),
+                "schemaEncoding": "protobuf",
+            }
+        )
+
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):
