@@ -100,10 +100,12 @@ full_path = os.path.join(path_to_dbc, "hytech.dbc")
 db = cantools.database.load_file(full_path)
 with open("hytech.proto", "w+") as proto_file:
     proto_file.write('syntax = "proto3";\n\n')
+    proto_file.write('import "google/protobuf/timestamp.proto";\n\n')
     for msg in db.messages:
         proto_file = append_proto_message_from_CAN_message(proto_file, msg)
     video_schema = (
         "message CompressedImage {"
+        "    google.protobuf.Timestamp timestamp = 1;"
         "    string frame_id = 4;\n\n"
         "    bytes data = 2;\n\n"
         "    string format = 3;\n}\n\n"
