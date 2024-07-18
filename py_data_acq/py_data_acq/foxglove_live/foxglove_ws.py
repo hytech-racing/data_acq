@@ -17,27 +17,31 @@ from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 from foxglove_schemas_protobuf import CompressedImage_pb2 
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
 from google.protobuf.descriptor import FileDescriptor
+from google.protobuf.message import Message
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
 
 def build_file_descriptor_set(
-        message_class: Type[google.protobuf.message.Message],
-    ) -> FileDescriptorSet:
-        """
-        Build a FileDescriptorSet representing the message class and its dependencies.
-        """
-        file_descriptor_set = FileDescriptorSet()
-        seen_dependencies: Set[str] = set()
+    message_class: Type[Message], file_path: str
+) -> None:
+    """
+    Build a FileDescriptorSet representing the message class and its dependencies and append it to an existing file.
+    """
+    file_descriptor_set = FileDescriptorSet()
+    seen_dependencies: Set[str] = set()
 
-        def append_file_descriptor(file_descriptor: FileDescriptor):
-            for dep in file_descriptor.dependencies:
-                if dep.name not in seen_dependencies:
-                    seen_dependencies.add(dep.name)
-                    append_file_descriptor(dep)
-            file_descriptor.CopyToProto(file_descriptor_set.file.add())  # type: ignore
+    def append_file_descriptor(file_descriptor: FileDescriptor):
+        for dep in file_descriptor.dependencies:
+            if dep.name not in seen_dependencies:
+                seen_dependencies.add(dep.name)
+                append_file_descriptor(dep)
+        file_descriptor_set.file.add().CopyFrom(file_descriptor.file_descriptor_proto)
 
-        append_file_descriptor(message_class.DESCRIPTOR.file)
-        return file_descriptor_set
+    append_file_descriptor(message_class.DESCRIPTOR.file)
+
+    # Write the FileDescriptorSet to the specified file
+    with open(file_path, 'ab') as f:  # Append in binary mode
+        f.write(file_descriptor_set.SerializeToString())
 
 class HTProtobufFoxgloveServer(FoxgloveServer):
     def __init__(self, host: str, port: int, name: str, pb_bin_file_path: str, schema_names: list[str]):
@@ -46,6 +50,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         self.schema_names = schema_names
         self.schema = standard_b64encode(open(pb_bin_file_path, "rb").read()).decode("ascii")
         self.chan_id_dict = {}
+        self.filepath = pb_bin_file_path
         
     # this is run when we use this in a with statement for context management
     
@@ -64,12 +69,12 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
         )
         self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await super().add_channel(
             {
-                "topic": CompressedImage,
+                "topic": CompressedImage.DESCRIPTOR.name + "_data",
                 "encoding": "protobuf",
                 "schemaName": CompressedImage.DESCRIPTOR.name,
-                "schema":  b64encode(
-                    build_file_descriptor_set(CompressedImage).SerializeToString(),
-                    ).decode("ascii")
+                "schema": b64encode(
+                    build_file_descriptor_set(CompressedImage, self.filepath).SerializeToString()
+                ).decode("ascii"),
             }
         )
         return self

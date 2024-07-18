@@ -3,7 +3,8 @@ import cantools
 from cantools.database import *
 import pkg_resources
 import sys
-
+from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
+from foxglove_schemas_protobuf import CompressedImage_pb2 
 
 class HyTechCANmsg:
     def __init__(self):
@@ -102,3 +103,4 @@ with open("hytech.proto", "w+") as proto_file:
     proto_file.write('syntax = "proto3";\n\n')
     for msg in db.messages:
         proto_file = append_proto_message_from_CAN_message(proto_file, msg)
+    
