@@ -130,6 +130,7 @@ def compress_frame_to_protobuf(frame):
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
     cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video0", cv2.CAP_V4L2)
+    
     if not cap.isOpened():
         logger.error("Failed to open /dev/video0, trying /dev/video1")
         cap = await loop.run_in_executor(None, cv2.VideoCapture, "/dev/video1", cv2.CAP_V4L2)
@@ -140,7 +141,7 @@ async def continuous_video_receiver(queue, q2):
             logger.info("/dev/video1 opened successfully")
     else:
         logger.info("/dev/video0 opened successfully")
-
+    cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
     while True:
         ret, frame = await loop.run_in_executor(None, cap.read)
         if not ret:
