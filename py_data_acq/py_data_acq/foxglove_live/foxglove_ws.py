@@ -67,17 +67,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 "schema": self.schema,
             }
         )
-        self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await super().add_channel(
-            {
-                "topic": CompressedImage.DESCRIPTOR.name + "_data",
-                "encoding": "protobuf",
-                "schemaName": CompressedImage.DESCRIPTOR.name,
-                "schema": b64encode(
-                    build_file_descriptor_set(CompressedImage, self.filepath).SerializeToString()
-                ).decode("ascii"),
-            }
-        )
-        return self
+        
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):
         return await super().__aexit__(exc_type, exc_val, traceback)
