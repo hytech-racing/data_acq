@@ -124,7 +124,7 @@ def compress_frame_to_protobuf(frame):
     compressed_image.format = "jpeg"
     compressed_image.data = compressed_frame.tobytes()
     
-    return QueueData(compressed_image.DESCRIPTOR.name, compressed_image)
+    return compressed_image
  #if no work then delete QUeueuData
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
@@ -234,7 +234,7 @@ async def fxglv_websocket_consume_data(queue, foxglove_server):
     async with foxglove_server as fz:
         while True:
             try: 
-                logger.info(queue)
+                logger.info(queue.qsize())
                 await fz.send_msgs_from_queue(queue)
             except:
                 logger.info("fxglv error write data")
