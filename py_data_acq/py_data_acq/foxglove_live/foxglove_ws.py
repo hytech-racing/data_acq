@@ -21,28 +21,7 @@ from google.protobuf.message import Message
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
 
-def build_file_descriptor_set(
-    message_class: Type[Message], file_path: str
-) -> str:
-    """
-    Build a FileDescriptorSet representing the message class and its dependencies and append it to an existing file.
-    """
-    file_descriptor_set = FileDescriptorSet()
-    seen_dependencies: Set[str] = set()
 
-    def append_file_descriptor(file_descriptor: FileDescriptor):
-        for dep in file_descriptor.dependencies:
-            if dep.name not in seen_dependencies:
-                seen_dependencies.add(dep.name)
-                append_file_descriptor(dep)
-        file_descriptor_set.file.add().CopyFrom(file_descriptor.file_descriptor_proto)
-
-    append_file_descriptor(message_class.DESCRIPTOR.file)
-
-    # Write the FileDescriptorSet to the specified file
-    with open(file_path, 'ab') as f:  # Append in binary mode
-        f.write(file_descriptor_set.SerializeToString())
-    return file_path
 
 class HTProtobufFoxgloveServer(FoxgloveServer):
     def __init__(self, host: str, port: int, name: str, pb_bin_file_path: str, schema_names: list[str]):
@@ -66,17 +45,6 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 "encoding": "protobuf",
                 "schemaName": name,
                 "schema": self.schema,
-            }
-        )
-        self.chan_id_dict[CompressedImage.DESCRIPTOR.name] = await super().add_channel(
-            {
-                "topic": CompressedImage.DESCRIPTOR.name + "_data",
-                "encoding": "protobuf",
-                "schemaName": CompressedImage.DESCRIPTOR.name,
-                "schema": standard_b64encode(
-                    open(
-                        build_file_descriptor_set(CompressedImage, self.filepath).SerializeToString(), "rb").read()
-                ).decode("ascii"),
             }
         )
         return self
