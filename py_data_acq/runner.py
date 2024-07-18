@@ -148,8 +148,9 @@ def check_format(cap, fmt):
 #Webcam listener
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
-
-    formats = [('M', 'J', 'P', 'G')]
+    #sudo rmmod uvcvideo
+    #sudo modprobe uvcvideo 
+    formats = [('Y', 'U', 'Y', 'V')]
 
     cap = await open_camera(loop, "/dev/video1", formats)
     if not cap:
