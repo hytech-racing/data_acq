@@ -23,7 +23,7 @@ from google.protobuf.message import Message
 
 def build_file_descriptor_set(
     message_class: Type[Message], file_path: str
-) -> None:
+) -> str:
     """
     Build a FileDescriptorSet representing the message class and its dependencies and append it to an existing file.
     """
@@ -42,6 +42,7 @@ def build_file_descriptor_set(
     # Write the FileDescriptorSet to the specified file
     with open(file_path, 'ab') as f:  # Append in binary mode
         f.write(file_descriptor_set.SerializeToString())
+    return file_path
 
 class HTProtobufFoxgloveServer(FoxgloveServer):
     def __init__(self, host: str, port: int, name: str, pb_bin_file_path: str, schema_names: list[str]):
@@ -72,8 +73,9 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 "topic": CompressedImage.DESCRIPTOR.name + "_data",
                 "encoding": "protobuf",
                 "schemaName": CompressedImage.DESCRIPTOR.name,
-                "schema": b64encode(
-                    build_file_descriptor_set(CompressedImage, self.filepath).SerializeToString()
+                "schema": standard_b64encode(
+                    open(
+                        build_file_descriptor_set(CompressedImage, self.filepath).SerializeToString(), "rb").read()
                 ).decode("ascii"),
             }
         )
