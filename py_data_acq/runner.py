@@ -149,7 +149,7 @@ def check_format(cap, fmt):
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
 
-    formats = [('Y', 'U', 'Y', 'V'), ('M', 'J', 'P', 'G')]
+    formats = [('M', 'J', 'P', 'G')]
 
     cap = await open_camera(loop, "/dev/video1", formats)
     if not cap:
