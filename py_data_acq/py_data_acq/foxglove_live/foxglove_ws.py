@@ -21,8 +21,8 @@ from google.protobuf.descriptor import FileDescriptor
 from google.protobuf.message import Message
 
 #from aero_sensor_protos_np_proto_py.aero_sensor_pb2 import aero_data
-from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
-from aero_sensor_protos_np_proto_py.aero_sensor_pb2 import aero_data
+from .py_data_acq.aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
+from .py_data_acq.aero_sensor_pb2 import aero_data
 
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
 # based foxglove server that serves data from an asyncio queue.
