@@ -29,7 +29,6 @@ from aero_sensor_protos_np_proto_py.aero_sensor.aero_sensor_pb2 import aero_data
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 import cv2
 
-print(aero_sensor_protos_np_proto_py.__file__)
 
 
 # TODO we may want to have a config file handling to set params such as:
