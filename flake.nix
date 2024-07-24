@@ -58,14 +58,14 @@
       nix_protos_overlays = nix-proto.generateOverlays'
         {
           aero_sensor_protos_np =
-          nix-proto.mkProtoDerivation {
-            name = "aero_sensor_protos_np";
-            src = nix-proto.lib.srcFromNamespace {
-              root = ./proto;
-              namespace = "aero_sensor";
+            nix-proto.mkProtoDerivation {
+              name = "aero_sensor_protos_np";
+              src = nix-proto.lib.srcFromNamespace {
+                root = ./proto;
+                namespace = "aero_sensor";
+              };
+              version = "1.0.0";
             };
-            version = "1.0.0";
-          };
           hytech_np = { proto_gen_pkg }:
             nix-proto.mkProtoDerivation {
               name = "hytech_np";
@@ -113,7 +113,6 @@
           proto_gen_pkg
           ht_can_pkg
           py_foxglove_proto_schemas_pkg 
-          aero_sensor_protos_np_proto_py
           cmake
           can-utils
           nodejs

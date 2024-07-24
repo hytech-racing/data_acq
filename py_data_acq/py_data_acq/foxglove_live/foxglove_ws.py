@@ -21,6 +21,10 @@ from google.protobuf.descriptor import FileDescriptor
 from google.protobuf.message import Message
 
 
+from aero_sensor_protos_np_proto_py.aero_sensor import aero_sensor_pb2
+from aero_sensor_protos_np_proto_py.aero_sensor.aero_sensor_pb2 import aero_data
+
+#WRONG import!
 #from aero_sensor_protos_np_proto_py.aero_sensor_pb2 import aero_data
 
 # what I want to do with this class is extend the foxglove server to make it where it creates a protobuf schema
@@ -81,7 +85,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 ).decode("ascii"),
                 "schemaEncoding": "protobuf",
             }
-        )  
+        ) ''' 
         self.chan_id_dict["aero_data_ttyACM0"]  = await super().add_channel(
             {
                 "topic": "aero_data_ttyACM0_data",
@@ -103,7 +107,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 ).decode("ascii"),
                 "schemaEncoding": "protobuf",
             }
-        )'''
+        )
 
         return self
 
