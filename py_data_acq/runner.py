@@ -106,6 +106,14 @@ class Listener(asyncio.Protocol):
     def disable_queue(self):
         self.logging_enabled = False
 
+def process_buffer(buffer):
+    """Extracts eight 32-bit floats from the buffer."""
+    if len(buffer) < 32:
+        raise ValueError("Buffer does not contain enough data for eight 32-bit floats.")
+    # Unpack 8 32-bit floats (4 bytes each) in little-endian order
+    floats = struct.unpack("<8f", buffer[:32])
+    return floats
+
 #Aero sensor listener
 async def continuous_aero_receiver(queue, q2):
     loop = asyncio.get_event_loop()
