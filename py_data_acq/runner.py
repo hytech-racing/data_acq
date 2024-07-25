@@ -53,11 +53,11 @@ def find_can_interface():
 
 #add aero data to q
 async def append_sensor_data(queue, q2, data, port_name):
+    # needs fixing!
     msg = aero_sensor_pb2.aero_data()
     msg.readings_pa.extend(data)
-    sensor_name = port_name.split("/")[-1]
-    msg.DESCRIPTOR.name = msg.DESCRIPTOR.name + "_" + sensor_name
-    msg = QueueData(msg.DESCRIPTOR.name, msg)
+    sensor_name = "_" + port_name.split("/")[-1]
+    msg = QueueData(msg.DESCRIPTOR.name, msg, sensor_name)
     await queue.put(msg)
     await q2.put(msg)
 

@@ -67,10 +67,10 @@ class HTPBMcapWriter:
 
         return True
 
-    async def write_msg(self, msg):
+    async def write_msg(self, msg, portname= ""):
         if self.is_writing:
             self.mcap_writer_class.write_message(
-                topic=msg.DESCRIPTOR.name + "_data",
+                topic=msg.DESCRIPTOR.name + portname + "_data",
                 message=msg,
                 log_time=int(time.time_ns()),
                 publish_time=int(time.time_ns()),
@@ -81,4 +81,4 @@ class HTPBMcapWriter:
     async def write_data(self, queue):
         msg = await queue.get()
         if msg is not None:
-            return await self.write_msg(msg.pb_msg)
+            return await self.write_msg(msg.pb_msg, msg.portname)

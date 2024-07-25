@@ -119,6 +119,6 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
             data = await queue.get()
             if data is not None:
                 # send data to channel
-                await super().send_message(self.chan_id_dict[data.name], time.time_ns(), data.data)
+                await super().send_message(self.chan_id_dict[data.name + data.portname], time.time_ns(), data.data)
         except asyncio.CancelledError:
             pass

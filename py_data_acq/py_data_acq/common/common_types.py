@@ -1,10 +1,11 @@
 from foxglove_schemas_protobuf.CompressedImage_pb2 import CompressedImage
 
 class QueueData():
-    def __init__(self, schema_name: str, msg):
+    def __init__(self, schema_name: str, msg, portname= ""):
         self.name = schema_name
         self.data = msg.SerializeToString()
         self.pb_msg = msg
+        self.portname = portname
 
 class MCAPServerStatusQueueData():
     def __init__(self, writing_status: bool, writing_file: str):
