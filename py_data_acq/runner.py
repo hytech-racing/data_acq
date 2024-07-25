@@ -328,9 +328,9 @@ async def run(logger):
         init_filename=mcap_writer.actual_path
     )
     logger.info("mcao")
-    #receiver_task = asyncio.create_task(
-    #        continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
-    #)
+    receiver_task = asyncio.create_task(
+            continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
+    )
 
     #testing these two tasks
     aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
@@ -345,7 +345,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(aero_receiver_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(receiver_task, aero_receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
