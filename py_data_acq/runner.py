@@ -327,7 +327,6 @@ async def run(logger):
         init_writing=init_writing_on_start,
         init_filename=mcap_writer.actual_path
     )
-    logger.info("mcao")
     receiver_task = asyncio.create_task(
             continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
     )
