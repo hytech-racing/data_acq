@@ -51,7 +51,7 @@ def find_can_interface():
     return None
 
 
-#add aero data to q
+#Function to add aero data to Queue
 async def append_sensor_data(queue, q2, data, port_name):
     # needs fixing!
     msg = aero_sensor_pb2.aero_data()
@@ -61,7 +61,7 @@ async def append_sensor_data(queue, q2, data, port_name):
     await queue.put(msg)
     await q2.put(msg)
 
-#Listener class
+#Listener class--listens to incoming aero signals sent by serial
 class Listener(asyncio.Protocol):
     def connection_made(self, transport):
         self.transport = transport
@@ -106,15 +106,15 @@ class Listener(asyncio.Protocol):
     def disable_queue(self):
         self.logging_enabled = False
 
+#Function to extract eight 32-bit floats from the buffer
 def process_buffer(buffer):
-    """Extracts eight 32-bit floats from the buffer."""
     if len(buffer) < 32:
         raise ValueError("Buffer does not contain enough data for eight 32-bit floats.")
     # Unpack 8 32-bit floats (4 bytes each) in little-endian order
     floats = struct.unpack("<8f", buffer[:32])
     return floats
 
-#Aero sensor listener
+#Function to start continuous aero receiver/listener
 async def continuous_aero_receiver(queue, q2):
     loop = asyncio.get_event_loop()
     ports = ['/dev/ttyACM0', '/dev/ttyACM1']
@@ -125,7 +125,7 @@ async def continuous_aero_receiver(queue, q2):
     listener.setup_listener(queue, q2, ports[0])
     listener2.setup_listener(queue, q2, ports[1])
 
-# Packing frames in protobuf
+# Function to Packing frames in protobuf
 def compress_frame_to_protobuf(frame):
     ret, compressed_frame = cv2.imencode(".jpg", frame)
     if not ret:
@@ -136,7 +136,7 @@ def compress_frame_to_protobuf(frame):
     compressed_image.data = compressed_frame.tobytes()
     
     return compressed_image
-    
+# Function to open camera    
 async def open_camera(loop, device, formats):
     cap = None
     for fmt in formats:
@@ -152,14 +152,15 @@ async def open_camera(loop, device, formats):
             logger.error(f"Failed to set format {fmt} on {device}")
             cap.release()
     return None
-
+# Check if format of the camera is what we intended
 def check_format(cap, fmt):
     actual_fmt = int(cap.get(cv2.CAP_PROP_FOURCC))
     return actual_fmt == cv2.VideoWriter_fourcc(*fmt)
     
-# Webcam frame receiver
+# Function for continous webcam frame receiver
 async def continuous_video_receiver(queue, q2):
     loop = asyncio.get_event_loop()
+    #try this in ssh if errors are encoutnered
     #sudo rmmod uvcvideo
     #sudo modprobe uvcvideo nodrop=1 timeout=5000 quirks=0xC0
     formats = [('M', 'J', 'P', 'G')]
@@ -331,7 +332,7 @@ async def run(logger):
             continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
     )
 
-    #testing these two tasks
+    #Aero task & video task
     aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
     #video_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
 
