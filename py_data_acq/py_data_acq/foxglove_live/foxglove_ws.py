@@ -74,7 +74,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 "schema": self.schema,
             }
         )
-        # Adding schema to channel example
+        # Adding CompressedImage to channel
         '''self.chan_id_dict["foxglove.CompressedImage"] = await super().add_channel(
             {
                 "topic": CompressedImage.DESCRIPTOR.name,
@@ -86,6 +86,7 @@ class HTProtobufFoxgloveServer(FoxgloveServer):
                 "schemaEncoding": "protobuf",
             }
         ) ''' 
+        # Add aero sensor channels
         self.chan_id_dict["aero_data_ttyACM0"]  = await super().add_channel(
             {
                 "topic": "aero_data_ttyACM0_data",
