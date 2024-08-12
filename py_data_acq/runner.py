@@ -87,7 +87,7 @@ class Listener(asyncio.Protocol):
                     # testing
                     # asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
                     asyncio.create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
-                    
+                    print("aero data received")
                     # log_sensor_data(self.queue, floats, self.port_name)
                     # print(floats)
                 self.buffer = after_hash[46:]
