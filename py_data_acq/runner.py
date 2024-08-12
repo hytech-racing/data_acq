@@ -84,7 +84,9 @@ class Listener(asyncio.Protocol):
             if len(after_hash) >= 46:
                 floats = process_buffer(after_hash[:32])
                 if self.logging_enabled:
-                    asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
+                    # testing
+                    # asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
+                    asyncio.create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
                     
                     # log_sensor_data(self.queue, floats, self.port_name)
                     # print(floats)
