@@ -357,7 +357,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(receiver_task, aero_receiver_task, , fx_task, mcap_task, srv_task)
+    await asyncio.gather(receiver_task, aero_receiver_task, aero2_receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
