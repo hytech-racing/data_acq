@@ -87,8 +87,8 @@ class Listener(asyncio.Protocol):
                 floats = process_buffer(after_hash[:32])
                 if self.logging_enabled:
                     # testing
-                    # asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
-                    asyncio.create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
+                    asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
+                    # asyncio.create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
                     print("aero data received" + self.port_name)
                     # log_sensor_data(self.queue, floats, self.port_name)
                     # print(floats)
@@ -130,8 +130,11 @@ async def continuous_aero2_receiver(queue, q2):
     global listener2
     loop = asyncio.get_event_loop()
     ports = ['/dev/ttyACM0', '/dev/ttyACM1']
+    logger.info("b4 coro2")
     coro2 = serial_asyncio.create_serial_connection(loop, Listener, ports[1], baudrate=500000)
+    logger.info("b4 listeners")
     transport2, listener2 = await coro2
+    logger.info("b4 setup")
     listener2.setup_listener(queue, q2, ports[1])
 
 # Function to Packing frames in protobuf
@@ -340,7 +343,7 @@ async def run(logger):
     receiver_task = asyncio.create_task(
             continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
     )
-
+aero2_receiver_task
     #Aero task & video task
     aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
     aero2_receiver_task = asyncio.create_task(continuous_aero2_receiver(queue, queue2))
@@ -355,7 +358,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(receiver_task, aero_receiver_task, aero2_receiver_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(receiver_task, aero_receiver_task, , fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
