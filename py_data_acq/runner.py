@@ -58,8 +58,10 @@ async def append_sensor_data(queue, q2, data, port_name):
     msg.readings_pa.extend(data)
     sensor_name = "_" + port_name.split("/")[-1]
     msg = QueueData(msg.DESCRIPTOR.name, msg, sensor_name)
+    logger.info(msg.DESCRIPTOR.name + " | " + sensor_name)
     await queue.put(msg)
     await q2.put(msg)
+    
 
 #Listener class--listens to incoming aero signals sent by serial
 class Listener(asyncio.Protocol):
@@ -87,7 +89,7 @@ class Listener(asyncio.Protocol):
                     # testing
                     # asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
                     asyncio.create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
-                    print("aero data received")
+                    print("aero data received" + self.port_name)
                     # log_sensor_data(self.queue, floats, self.port_name)
                     # print(floats)
                 self.buffer = after_hash[46:]
@@ -118,6 +120,7 @@ def process_buffer(buffer):
 
 #Function to start continuous aero receiver/listener
 async def continuous_aero_receiver(queue, q2):
+    global listener, listener2
     loop = asyncio.get_event_loop()
     ports = ['/dev/ttyACM0', '/dev/ttyACM1']
     coro1 = serial_asyncio.create_serial_connection(loop, Listener, ports[0], baudrate=500000)
