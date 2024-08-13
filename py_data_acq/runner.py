@@ -58,7 +58,7 @@ async def append_sensor_data(queue, q2, data, port_name):
     msg.readings_pa.extend(data)
     sensor_name = "_" + port_name.split("/")[-1]
     msg = QueueData(msg.DESCRIPTOR.name, msg, sensor_name)
-    logger.info(msg.DESCRIPTOR.name + " | " + sensor_name)
+    logger.info(msg.name + " | " + sensor_name)
     await queue.put(msg)
     await q2.put(msg)
     
