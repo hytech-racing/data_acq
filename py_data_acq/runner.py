@@ -120,14 +120,18 @@ def process_buffer(buffer):
 
 #Function to start continuous aero receiver/listener
 async def continuous_aero_receiver(queue, q2):
-    global listener, listener2
+    global listener
     loop = asyncio.get_event_loop()
     ports = ['/dev/ttyACM0', '/dev/ttyACM1']
     coro1 = serial_asyncio.create_serial_connection(loop, Listener, ports[0], baudrate=500000)
-    coro2 = serial_asyncio.create_serial_connection(loop, Listener, ports[1], baudrate=500000)
     transport1, listener = await coro1
-    transport2, listener2 = await coro2
     listener.setup_listener(queue, q2, ports[0])
+async def continuous_aero2_receiver(queue, q2):
+    global listener2
+    loop = asyncio.get_event_loop()
+    ports = ['/dev/ttyACM0', '/dev/ttyACM1']
+    coro2 = serial_asyncio.create_serial_connection(loop, Listener, ports[1], baudrate=500000)
+    transport2, listener2 = await coro2
     listener2.setup_listener(queue, q2, ports[1])
 
 # Function to Packing frames in protobuf
@@ -339,6 +343,7 @@ async def run(logger):
 
     #Aero task & video task
     aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
+    aero2_receiver_task = asyncio.create_task(continuous_aero2_receiver(queue, queue2))
     #video_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
 
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
@@ -350,7 +355,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(receiver_task, aero_receiver_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(receiver_task, aero_receiver_task, aero2_receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
