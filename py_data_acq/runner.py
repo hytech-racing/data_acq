@@ -54,6 +54,7 @@ def find_can_interface():
 #Function to add aero data to Queue
 async def append_sensor_data(queue, q2, data, port_name):
     # needs fixing!
+    await asyncio.sleep(0)
     msg = aero_sensor_pb2.aero_data()
     msg.readings_pa.extend(data)
     sensor_name = "_" + port_name.split("/")[-1]
@@ -71,7 +72,7 @@ class Listener(asyncio.Protocol):
 
         print("Connection made")
         
-    async def data_received(self, data):
+    def data_received(self, data):
         # print(data)
         self.buffer += data
         if b"#" in self.buffer:
@@ -84,7 +85,7 @@ class Listener(asyncio.Protocol):
                 if self.logging_enabled:
                     # testing
                     # asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
-                    await append_sensor_data(self.queue, self.q2, floats, self.port_name)
+                    asyncio.create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
                     # log_sensor_data(self.queue, floats, self.port_name)
                     # print(floats)
                 self.buffer = after_hash[46:]
