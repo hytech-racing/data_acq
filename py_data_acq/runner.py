@@ -119,11 +119,11 @@ async def continuous_aero_receiver(queue, q2):
     loop = asyncio.get_event_loop()
     ports = ['/dev/ttyACM0', '/dev/ttyACM1']
     coro1 = serial_asyncio.create_serial_connection(loop, Listener, ports[0], baudrate=500000)
-    coro2 = serial_asyncio.create_serial_connection(loop, Listener, ports[1], baudrate=500000)
+    #coro2 = serial_asyncio.create_serial_connection(loop, Listener, ports[1], baudrate=500000)
     transport1, listener = await coro1
-    transport2, listener2 = await coro2
+    #transport2, listener2 = await coro2
     listener.setup_listener(queue, q2, ports[0])
-    listener2.setup_listener(queue, q2, ports[1])
+    #listener2.setup_listener(queue, q2, ports[1])
 
 # Function to Packing frames in protobuf
 def compress_frame_to_protobuf(frame):
