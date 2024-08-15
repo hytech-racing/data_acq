@@ -52,58 +52,13 @@ def find_can_interface():
 
 
 #Function to add aero data to Queue
-async def append_sensor_data(queue, q2, data, port_name):
+def append_sensor_data(data, port_name):
     # needs fixing!
     msg = aero_sensor_pb2.aero_data()
     msg.readings_pa.extend(data)
     sensor_name = "_" + port_name.split("/")[-1]
     msg = QueueData(msg.DESCRIPTOR.name, msg, sensor_name)
-    await queue.put(msg)
-    await q2.put(msg)
-class Listener(asyncio.Protocol):
-    def connection_made(self, transport):
-        self.transport = transport
-        self.logging_enabled = True
-        self.transport.write(b"@")
-        print(f"Successfully wrote '@'")
-        self.transport.write(b"D")
-        print(f"Successfully wrote 'D'")
-
-        print("Connection made")
-        
-    def data_received(self, data):
-        # print(data)
-        self.buffer += data
-        if b"#" in self.buffer:
-            parts = self.buffer.split(b"#", 1)
-            before_hash = parts[0]
-            after_hash = parts[1]
-
-            if len(after_hash) >= 46:
-                floats = process_buffer(after_hash[:32])
-                if self.logging_enabled:
-                    # testing
-                    # asyncio.get_event_loop().create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
-                    asyncio.create_task(append_sensor_data(self.queue, self.q2, floats, self.port_name))
-                    # log_sensor_data(self.queue, floats, self.port_name)
-                    # print(floats)
-                self.buffer = after_hash[46:]
-            else:
-                self.buffer = b"#" + after_hash
-    def connection_lost(self, exc):
-        print("Connection lost")
-
-    def setup_listener(self, queue, q2, port_name):
-        self.buffer = b""
-        self.queue = queue
-        self.q2 = q2
-        self.port_name = port_name
-
-    def enable_queue(self):
-        self.logging_enabled = True
-
-    def disable_queue(self):
-        self.logging_enabled = False
+    return msg
 
 #Function to extract eight 32-bit floats from the buffer
 def process_buffer(buffer):
@@ -114,16 +69,38 @@ def process_buffer(buffer):
     return floats
 
 #Function to start continuous aero receiver/listener
-async def continuous_aero_receiver(queue, q2):
-    global listener
-    loop = asyncio.get_event_loop()
-    ports = ['/dev/ttyACM0', '/dev/ttyACM1']
-    coro1 = serial_asyncio.create_serial_connection(loop, Listener, ports[0], baudrate=500000)
-    coro2 = serial_asyncio.create_serial_connection(loop, Listener, ports[1], baudrate=500000)
-    transport1, listener = await coro1
-    transport2, listener2 = await coro2
-    listener.setup_listener(queue, q2, ports[0])
-    listener2.setup_listener(queue, q2, ports[1])
+async def continuous_aero_receiver(queue, q2, port_name):
+    loop = asyncio.get_running_loop()
+    ser = serial.Serial(port_name)
+    
+    buffer = b""
+    
+    try:
+        while True:
+            # Read a chunk of data from the serial port asynchronously
+            data = await loop.run_in_executor(None, ser.read, 1024)
+            if data:
+                buffer += data
+                
+                # Continuously analyze the buffer as data comes in
+                if b"#" in buffer:
+                    parts = buffer.split(b"#", 1)
+                    before_hash = parts[0]
+                    after_hash = parts[1]
+
+                    if len(after_hash) >= 46:
+                        floats = process_buffer(after_hash[:32])
+                        if logging_enabled:
+                            msg = append_sensor_data(floats, port_name)
+                            await queue.put(msg)
+                            await q2.put(msg)
+                        buffer = after_hash[46:]
+                    else:
+                        buffer = b"#" + after_hash
+
+            await asyncio.sleep(0)
+    except:
+        logger.info("aero error")
 
 # Function to Packing frames in protobuf
 def compress_frame_to_protobuf(frame):
@@ -332,7 +309,8 @@ async def run(logger):
             continuous_can_receiver(db, msg_pb_classes, queue, queue2, bus)                      
     )
     #Aero task & video task
-    aero_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2))
+    aero_port0_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2, "/dev/ttyACM0"))
+    aero_port1_receiver_task = asyncio.create_task(continuous_aero_receiver(queue, queue2, "/dev/ttyACM1"))
     #video_task = asyncio.create_task(continuous_video_receiver(queue, queue2))
 
     fx_task = asyncio.create_task(fxglv_websocket_consume_data(queue, fx_s))
@@ -344,7 +322,7 @@ async def run(logger):
     # and schema in the foxglove websocket server.
 
 #edited tasks
-    await asyncio.gather(receiver_task, aero_receiver_task, fx_task, mcap_task, srv_task)
+    await asyncio.gather(receiver_task, aero_port0_receiver_task, aero_port1_receiver_task, fx_task, mcap_task, srv_task)
 
 if __name__ == "__main__":
     logging.basicConfig()
