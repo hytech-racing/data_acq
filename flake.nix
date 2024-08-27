@@ -140,7 +140,7 @@
 
       packages = rec {
         default = pkgs.py_data_acq_pkg;
-        py_dbc_proto_gen_pkg = pkgs.py_data_acq_pkg;
+        py_dbc_proto_gen_pkg = pkgs.py_dbc_proto_gen_pkg;
         proto_gen_pkg = pkgs.proto_gen_pkg;
         hytech_np = pkgs.hytech_np;
         hytech_np_proto_py = pkgs.hytech_np_proto_py;

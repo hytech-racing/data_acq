@@ -4,13 +4,12 @@ pkgs.stdenv.mkDerivation rec {
   name = "ht-proto-gen";
   
   src = builtins.filterSource (path: type: false) ./.;
-  
   buildInputs = [ py_dbc_proto_gen_pkg ht_can_pkg protobuf ]; # Python as a build dependency
   
   # Define the build phase to execute the scripts
   buildPhase = ''
     # Run the Python script
-    dbc_to_proto.py ${ht_can_pkg}
+    ${py_dbc_proto_gen_pkg}/bin/dbc_to_proto.py ${ht_can_pkg}
     protoc --include_imports --descriptor_set_out=hytech.bin hytech.proto
   '';
 
