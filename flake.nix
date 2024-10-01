@@ -58,17 +58,17 @@
           };
       };
       my_overlays = [
-        (self: super: {
-            cantools = super.cantools.overridePythonAttrs (old: rec {
-              version = "39.4.12";
-              pytestCheckPhase = '''';
-              src = old.fetchPypi {
-                pname = "cantools";
-                inherit version;
-                # hash = "sha256-JQn+rtpy/OA2deLszSKEuxyttqBzcAil50H+JDHUdCE=";
-              };
-            });
-          })
+        # (self: super: {
+        #     cantools = super.cantools.overridePythonAttrs (old: rec {
+        #       version = "39.4.12";
+        #       pytestCheckPhase = '''';
+        #       src = old.fetchPypi {
+        #         pname = "cantools";
+        #         inherit version;
+        #         # hash = "sha256-JQn+rtpy/OA2deLszSKEuxyttqBzcAil50H+JDHUdCE=";
+        #       };
+        #     });
+        #   })
         py_dbc_proto_gen_overlay
         py_data_acq_overlay
         proto_gen_overlay
