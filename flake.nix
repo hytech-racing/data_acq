@@ -60,7 +60,7 @@
       my_overlays = [
         (self: super: {
             cantools = super.cantools.overridePythonAttrs (old: rec {
-              version = "39.4.5";
+              version = "39.4.12";
               pytestCheckPhase = '''';
               src = old.fetchPypi {
                 pname = "cantools";
