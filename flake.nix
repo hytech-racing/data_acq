@@ -61,7 +61,7 @@
         (self: super: {
             cantools = super.cantools.overridePythonAttrs (old: rec {
               version = "39.4.5";
-              checkPhase = '''';
+              pytestCheckPhase = '''';
               src = old.fetchPypi {
                 pname = "cantools";
                 inherit version;
