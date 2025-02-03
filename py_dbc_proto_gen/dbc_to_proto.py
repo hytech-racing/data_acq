@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import cantools
 from cantools.database import *
-import pkg_resources
 import sys
 
 
